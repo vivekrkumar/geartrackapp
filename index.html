@@ -160,6 +160,19 @@
             </div>
         </div>
 
+        <!-- Calendar Modal (for historical data and adding play log) -->
+        <div id="calendarModal" class="hidden modal-overlay">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button id="closeCalendarModal" class="absolute top-3 right-3 text-2xl text-gray-400 hover:text-white transition-colors" aria-label="Close">
+                    &times;
+                </button>
+                <h2 id="calendarModalTitle" class="text-2xl font-bold mb-4 text-orange-400 text-center"></h2>
+                <div id="calendarContent">
+                    <!-- Calendar or form will be rendered here -->
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom Navigation Bar -->
         <footer id="bottomNavBar" class="fixed-bottom-nav bg-zinc-800 text-white flex justify-around items-center h-16 shadow-lg border-t border-orange-700 flex-shrink-0">
             <button id="navHome" class="flex flex-col items-center p-2 rounded-lg transition-colors text-orange-400" aria-label="Home">
@@ -294,7 +307,7 @@
             let list = [];
             for (const sport in initialGearData) {
                 initialGearData[sport].forEach(item => {
-                    list.push({ ...item, id: `${sport.toLowerCase()}-${item.name.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}` });
+                    list.push({ ...item, id: `${item.name.toLowerCase()}-${item.brand.toLowerCase().replace(/\s/g, '-')}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}` });
                 });
             }
             return list;
@@ -303,7 +316,7 @@
         // --- Global State and Variables ---
         // Using an object to hold state for easier management in plain JS
         const appState = {
-            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear', 'specificGearItemDetail'
+            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear', 'specificGearItemDetail', 'activities', 'playLogsDetail', 'addPlayLog'
             selectedSport: null,
             selectedGearType: null, // New state for selected gear type (Racket, Shoes, etc.)
             selectedGearItem: null, // New state to hold the specific gear item for detail view
@@ -367,6 +380,8 @@
         const aiCommentaryModal = document.getElementById('aiCommentaryModal');
         const replacementGearModal = document.getElementById('replacementGearModal');
         const bottomNavBar = document.getElementById('bottomNavBar'); // Get the bottom nav bar element
+        const calendarModal = document.getElementById('calendarModal'); // Get the calendar modal element
+
 
         // --- Helper Functions ---
 
@@ -392,18 +407,25 @@
                 renderSpecificGearItemDetail(appState.selectedGearItem); // Pass the specific item
             } else if (appState.appMode === 'addGear') {
                 renderAddGear();
+            } else if (appState.appMode === 'activities') { // New activities mode
+                renderActivitiesPage();
+            } else if (appState.appMode === 'playLogsDetail') {
+                renderPlayLogsDetail();
+            } else if (appState.appMode === 'addPlayLog') {
+                renderAddPlayLogPage();
             }
 
             // Manage modal visibility
             aiCommentaryModal.classList.toggle('hidden', !appState.commentaryGear);
             replacementGearModal.classList.toggle('hidden', !appState.showReplacementGear);
+            calendarModal.classList.toggle('hidden', appState.appMode !== 'showCalendar'); // Control calendar modal separately
 
             // Control body scroll based on modal visibility
             // This is now handled by the main content area's overflow-y-auto
             // document.body.style.overflow = (appState.commentaryGear || appState.showReplacementGear) ? 'hidden' : '';
         }
 
-        function navigate(mode, sport = null, gearType = null, gearItem = null) { // Added gearType parameter
+        function navigate(mode, sport = null, gearType = null, gearItem = null) { // Added gearItem parameter
             appState.appMode = mode;
             appState.selectedSport = sport;
             appState.selectedGearType = gearType; // Set selected gear type
@@ -434,7 +456,7 @@
                 // document.getElementById('navAddGear').classList.add('text-orange-400'); // Removed from bottom nav
             } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail' || appState.appMode === 'gearTypeDetail' || appState.appMode === 'specificGearItemDetail') { // Updated for new modes
                 document.getElementById('navMyGear').classList.add('text-orange-400');
-            } else if (appState.appMode === 'activities') { // New activities mode
+            } else if (appState.appMode === 'activities' || appState.appMode === 'playLogsDetail' || appState.appMode === 'addPlayLog') { // New activities mode
                 document.getElementById('navActivities').classList.add('text-orange-400');
             }
         }
@@ -715,34 +737,17 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center justify-between mb-6"> <!-- Added justify-between -->
-                    <div class="flex items-center">
-                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearList', '${appState.selectedSport}')" aria-label="Back to Gear Health">
-                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                            </svg>
-                        </button>
-                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType}s</h2>
-                    </div>
-                    <!-- Moved "View Full AI Analysis" button here -->
-                    <button id="viewFullAnalysisButton" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
-                        View Full AI Analysis
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearList', '${appState.selectedSport}')" aria-label="Back to Gear Health">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
                     </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType}s</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="specificGearItemsList"></div>
             `;
             mainContent.appendChild(div);
-
-            // Add event listener for the new "View Full AI Analysis" button
-            const viewFullAnalysisButton = document.getElementById('viewFullAnalysisButton');
-            // This button's click handler will be set dynamically based on which item's analysis is relevant
-            // For now, it will just alert as there isn't a single "full analysis" for the type, but for each item.
-            // This button might be better placed on the individual item's detail page, or trigger a list of all item analyses.
-            // Re-evaluating based on previous request: "When the user clicks Wilson Clash 100 V2 Pro, the current page showing racket performance and scoring should show."
-            // This implies the "View Full AI Analysis" button should be on the *specific item's* detail page, not the list of items of a type.
-            // So, I'll remove this button from here and keep it only on renderSpecificGearItemDetail.
-            // The request was: "view full AI Analysis (for rackets, shoes, balls and court) should be removed from bottom of the page and moved to the top right of each relevant page."
-            // This means the button should be on the `specificGearItemDetail` page.
 
             const specificGearItemsListContainer = div.querySelector('#specificGearItemsList');
             if (specificGearItems.length === 0) {
@@ -755,15 +760,11 @@
                     let cardDisplayName = item.brand;
                     // Remove "Racket" or "Shoes" from display name if it's the item's type, not part of brand
                     if (item.name === "Racket") {
-                        // If it's a racket, just use the brand directly for names like "Wilson Clash 100 V2 Pro"
-                        // This assumes the brand already includes the model name for rackets
-                        cardDisplayName = item.brand;
+                        cardDisplayName = item.brand.replace(/Racket/g, '').trim(); // Remove "Racket" from brand name
                     } else if (item.name === "Shoes") {
-                        // If it's shoes, just use the brand directly for names like "Nike Vapour Zoom v9"
-                        cardDisplayName = item.brand;
+                        cardDisplayName = item.brand.replace(/Shoes/g, '').trim(); // Remove "Shoes" from brand name
                     } else {
-                        // For other types like Balls, Court, Watch, show brand and name
-                        cardDisplayName = `${item.brand} ${item.name}`;
+                        cardDisplayName = `${item.brand} ${item.name}`; // Default for Balls, Court, Watch
                     }
                     
                     itemCard.innerHTML = `
@@ -808,11 +809,16 @@
                     <p class="text-gray-300 mb-4">${gearDetail.description}</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearSubComponents"></div>
                 </div>
+
+                <button id="removeGearButton" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-red-700 transition-colors duration-300">
+                    Remove This Gear
+                </button>
             `;
             mainContent.appendChild(div);
 
             // Add event listener for the new "View Full AI Analysis" button
             document.getElementById('viewFullAnalysisButton').onclick = () => openCommentaryModal(item);
+            document.getElementById('removeGearButton').onclick = () => removeGearItem(item.id, item.sport);
 
 
             const subComponentsContainer = div.querySelector('#gearSubComponents');
@@ -1174,12 +1180,313 @@
             }
         }
 
+        // Function to remove a gear item
+        function removeGearItem(idToRemove, sportToNavigateBackTo) {
+            const confirmRemove = confirm('Are you sure you want to remove this gear item?');
+            if (confirmRemove) {
+                appState.equipmentList = appState.equipmentList.filter(item => item.id !== idToRemove);
+                alert('Gear item removed successfully!');
+                // Navigate back to the list of gear for that sport
+                navigate('gearTypeDetail', sportToNavigateBackTo, appState.selectedGearType);
+            }
+        }
+
+        // --- New Activities Page Render ---
+        function renderActivitiesPage() {
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportsSelection')" aria-label="Back to Sports">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">Activities</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="activitiesOptions"></div>
+            `;
+            mainContent.appendChild(div);
+
+            const activitiesOptions = div.querySelector('#activitiesOptions');
+            [
+                { name: 'Play Logs', description: 'View your detailed play session history.', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-orange-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>' },
+                { name: 'Image and Video Logs', description: 'Review uploaded media for analysis.', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-orange-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' },
+                { name: 'Trends', description: 'Track your performance and gear health over time.', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-orange-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>' },
+                { name: 'Event Calendar', description: 'Manage your upcoming matches and training sessions.', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-orange-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' },
+            ].forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'bg-zinc-900 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center justify-center min-h-[120px]';
+                optionDiv.innerHTML = `
+                    ${option.icon}
+                    <h3 class="text-xl font-bold text-orange-300 mb-1">${option.name}</h3>
+                    <p class="text-sm text-gray-400">${option.description}</p>
+                `;
+                optionDiv.onclick = () => {
+                    if (option.name === 'Play Logs') {
+                        navigate('playLogsDetail', appState.selectedSport);
+                    } else {
+                        alert(`${option.name} feature coming soon!`);
+                    }
+                };
+                activitiesOptions.appendChild(optionDiv);
+            });
+        }
+
+        // --- New Play Logs Detail Page Render ---
+        function renderPlayLogsDetail() {
+            const mockPlayLogs = {
+                daysPlayed: 5,
+                avgPlayDuration: "1.5 hours",
+                avgSinglesHours: "0.8 hours",
+                avgDoublesHours: "0.7 hours",
+                newCansUsed: 3,
+                last7Days: [
+                    { date: 'Mon, Jul 1', played: true, duration: '1.5h', singles: '1h', doubles: '0.5h', cans: 1 },
+                    { date: 'Tue, Jul 2', played: false },
+                    { date: 'Wed, Jul 3', played: true, duration: '2h', singles: '0.5h', doubles: '1.5h', cans: 1 },
+                    { date: 'Thu, Jul 4', played: true, duration: '1h', singles: '1h', doubles: '0h', cans: 0 },
+                    { date: 'Fri, Jul 5', played: false },
+                    { date: 'Sat, Jul 6', played: true, duration: '2.5h', singles: '1.5h', doubles: '1h', cans: 1 },
+                    { date: 'Sun, Jul 7', played: true, duration: '1h', singles: '0h', doubles: '1h', cans: 0 },
+                ]
+            };
+
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('activities')" aria-label="Back to Activities">
+                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Play Logs</h2>
+                    </div>
+                    <button id="addPlayLogButton" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-3 3V9a9 9 0 110 18A9 9 0 0112 9z" />
+                        </svg>
+                        Add Play Log
+                    </button>
+                </div>
+
+                <h3 class="text-xl font-bold text-orange-300 mb-4">Last 7 Day Summary</h3> <!-- Changed title -->
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
+                        <h3 class="text-lg font-bold text-orange-300 mb-1">Days Played</h3>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.daysPlayed}</p>
+                    </div>
+                    <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
+                        <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Play Duration</h3>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgPlayDuration}</p>
+                    </div>
+                    <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
+                        <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Singles Hours</h3>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgSinglesHours}</p>
+                    </div>
+                    <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
+                        <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Doubles Hours</h3>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgDoublesHours}</p>
+                    </div>
+                    <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
+                        <h3 class="text-lg font-bold text-orange-300 mb-1">New Cans Used</h3>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.newCansUsed}</p>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
+                    <h3 class="text-xl font-bold text-orange-300 mb-4">Daily Breakdown</h3>
+                    <div class="space-y-3">
+                        ${mockPlayLogs.last7Days.map(day => `
+                            <div class="p-3 rounded-lg flex justify-between items-center ${day.played ? 'bg-zinc-800' : 'bg-zinc-700 text-gray-400'} border border-zinc-600">
+                                <span class="font-semibold">${day.date}</span>
+                                ${day.played ? `
+                                    <span class="text-sm">Duration: ${day.duration} | Singles: ${day.singles} | Doubles: ${day.doubles} | Cans: ${day.cans}</span>
+                                ` : `
+                                    <span class="text-sm italic">No play logged</span>
+                                `}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button id="seeHistoricalDataButton" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-orange-600 transition-colors duration-300">
+                    See Historical Data
+                </button>
+            `;
+            mainContent.appendChild(div);
+
+            document.getElementById('addPlayLogButton').onclick = () => navigate('addPlayLog', appState.selectedSport);
+            document.getElementById('seeHistoricalDataButton').onclick = () => openCalendarModal('historical');
+        }
+
+        // --- New Add Play Log Page Render ---
+        function renderAddPlayLogPage() {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            const currentHour = new Date().getHours();
+            const defaultStartTime = `${currentHour.toString().padStart(2, '0')}:00`;
+            const defaultEndTime = `${((currentHour + 1) % 24).toString().padStart(2, '0')}:00`;
+
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('playLogsDetail', '${appState.selectedSport}')" aria-label="Back to Play Logs">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">Add New Play Log</h2>
+                </div>
+
+                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
+                    <div class="mb-4">
+                        <label for="playDate" class="block text-orange-300 text-sm font-bold mb-2">Date:</label>
+                        <input type="date" id="playDate" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500" value="${today}">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="startTime" class="block text-orange-300 text-sm font-bold mb-2">Start Time:</label>
+                            <input type="time" id="startTime" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500" value="${defaultStartTime}">
+                        </div>
+                        <div>
+                            <label for="endTime" class="block text-orange-300 text-sm font-bold mb-2">End Time:</label>
+                            <input type="time" id="endTime" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500" value="${defaultEndTime}">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="playType" class="block text-orange-300 text-sm font-bold mb-2">Play Type:</label>
+                        <select id="playType" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="Singles">Singles</option>
+                            <option value="Doubles">Doubles</option>
+                            <option value="Both">Both (Singles & Doubles)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="racketUsed" class="block text-orange-300 text-sm font-bold mb-2">Racket Used:</label>
+                        <select id="racketUsed" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">-- Select Racket --</option>
+                            ${appState.equipmentList.filter(item => item.name === 'Racket' && item.sport === appState.selectedSport)
+                                .map(racket => `<option value="${racket.id}">${racket.brand} ${racket.name.replace('Racket', '').trim()}</option>`).join('')}
+                        </select>
+                        <div class="flex gap-4 mt-2">
+                            <label for="racketPhotoBefore" class="flex-1 flex items-center justify-center p-3 bg-zinc-800 border border-zinc-700 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors text-orange-400 text-sm">
+                                <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                Before Play
+                                <input type="file" id="racketPhotoBefore" accept="image/*" class="hidden" onchange="handlePlayLogPhotoUpload(event, 'racketBefore')">
+                            </label>
+                            <label for="racketPhotoAfter" class="flex-1 flex items-center justify-center p-3 bg-zinc-800 border border-zinc-700 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors text-orange-400 text-sm">
+                                <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                After Play
+                                <input type="file" id="racketPhotoAfter" accept="image/*" class="hidden" onchange="handlePlayLogPhotoUpload(event, 'racketAfter')">
+                            </label>
+                        </div>
+                        <div id="racketPhotosPreview" class="flex gap-2 mt-2 justify-center"></div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="shoesUsed" class="block text-orange-300 text-sm font-bold mb-2">Shoes Used:</label>
+                        <select id="shoesUsed" class="w-full p-3 mb-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">-- Select Shoes --</option>
+                            ${appState.equipmentList.filter(item => item.name === 'Shoes' && item.sport === appState.selectedSport)
+                                .map(shoes => `<option value="${shoes.id}">${shoes.brand} ${shoes.name.replace('Shoes', '').trim()}</option>`).join('')}
+                        </select>
+                        <div class="flex gap-4 mt-2">
+                            <label for="shoesPhotoBefore" class="flex-1 flex items-center justify-center p-3 bg-zinc-800 border border-zinc-700 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors text-orange-400 text-sm">
+                                <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                Before Play
+                                <input type="file" id="shoesPhotoBefore" accept="image/*" class="hidden" onchange="handlePlayLogPhotoUpload(event, 'shoesBefore')">
+                            </label>
+                            <label for="shoesPhotoAfter" class="flex-1 flex items-center justify-center p-3 bg-zinc-800 border border-zinc-700 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors text-orange-400 text-sm">
+                                <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                After Play
+                                <input type="file" id="shoesPhotoAfter" accept="image/*" class="hidden" onchange="handlePlayLogPhotoUpload(event, 'shoesAfter')">
+                            </label>
+                        </div>
+                        <div id="shoesPhotosPreview" class="flex gap-2 mt-2 justify-center"></div>
+                    </div>
+
+                    <button id="savePlayLogButton" class="bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full hover:bg-orange-600 transition-colors duration-300">
+                        Save Play Log
+                    </button>
+                </div>
+            `;
+            mainContent.appendChild(div);
+
+            // Set up event listeners for the form
+            document.getElementById('savePlayLogButton').onclick = handleSavePlayLog;
+        }
+
+        // --- Event Handlers for New Play Log Page ---
+        let playLogPhotos = {
+            racketBefore: null,
+            racketAfter: null,
+            shoesBefore: null,
+            shoesAfter: null,
+        };
+
+        function handlePlayLogPhotoUpload(event, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    playLogPhotos[type] = e.target.result;
+                    const previewContainer = document.getElementById(`${type.includes('racket') ? 'racketPhotosPreview' : 'shoesPhotosPreview'}`);
+                    previewContainer.innerHTML = ''; // Clear previous preview
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleSavePlayLog() {
+            const date = document.getElementById('playDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const playType = document.getElementById('playType').value;
+            const racketUsed = document.getElementById('racketUsed').value;
+            const shoesUsed = document.getElementById('shoesUsed').value;
+
+            if (!date || !startTime || !endTime || !playType) {
+                alert("Please fill in all required fields (Date, Start/End Time, Play Type).");
+                return;
+            }
+
+            const newPlayLog = {
+                date,
+                startTime,
+                endTime,
+                playType,
+                racketUsedId: racketUsed,
+                shoesUsedId: shoesUsed,
+                racketPhotoBefore: playLogPhotos.racketBefore,
+                racketPhotoAfter: playLogPhotos.racketAfter,
+                shoesPhotoBefore: playLogPhotos.shoesBefore,
+                shoesPhotoAfter: playLogPhotos.shoesAfter,
+            };
+
+            console.log("New Play Log:", newPlayLog); // For demo, log to console
+            alert("Play log saved successfully! (Check console for details)");
+
+            // Reset form and navigate back
+            playLogPhotos = { racketBefore: null, racketAfter: null, shoesBefore: null, shoesAfter: null }; // Clear photos
+            navigate('playLogsDetail', appState.selectedSport);
+        }
+
+
         // --- Initial Render & Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             // Global Nav Buttons
             document.getElementById('homeButtonHeader').onclick = () => navigate('sportsSelection');
             document.getElementById('navHome').onclick = () => navigate('sportsSelection');
-            document.getElementById('navActivities').onclick = () => alert("Activities page coming soon!"); // New Activities button
+            document.getElementById('navActivities').onclick = () => navigate('activities'); // New Activities button
             document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]); // Default to first sport if none selected
             document.getElementById('navProfile').onclick = () => alert("Profile coming soon!");
 
@@ -1188,6 +1495,8 @@
             document.getElementById('closeCommentaryModal').onclick = closeCommentaryModal;
             replacementGearModal.onclick = closeReplacementGearModal; // Click outside to close
             document.getElementById('closeReplacementGearModal').onclick = closeReplacementGearModal;
+            calendarModal.onclick = closeCalendarModal; // Close calendar modal
+            document.getElementById('closeCalendarModal').onclick = closeCalendarModal;
             
             // AI Maintenance Tips button inside commentary modal
             document.getElementById('getAiMaintenanceTipsButton').onclick = () => getAiMaintenanceTips(appState.commentaryGear);
