@@ -10,6 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
+            /* Ensure body and html are full height and allow main content to scroll */
             height: 100vh;
             overflow: hidden;
         }
@@ -17,14 +18,14 @@
             height: 100%;
         }
         #app-container {
-            height: 100%;
+            height: 100%; /* Make app container fill the viewport height */
             display: flex;
             flex-direction: column;
         }
         main {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding-bottom: 5rem;
+            flex-grow: 1; /* Allow main content to take available space */
+            overflow-y: auto; /* Enable vertical scrolling for main content */
+            padding-bottom: 5rem; /* Space for fixed bottom nav */
         }
         .fixed-bottom-nav {
             position: fixed;
@@ -40,25 +41,27 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #262626;
+            background: #262626; /* zinc-800 */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #f97316;
+            background: #f97316; /* orange-500 */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #ea580c;
+            background: #ea580c; /* orange-600 */
         }
     </style>
 </head>
 <body class="bg-black text-white">
 
     <div id="app-container">
+        <!-- Header -->
         <header class="p-4 bg-orange-600 flex items-center justify-between shadow-lg flex-shrink-0">
             <div class="text-xl font-bold text-white">
                 <span role="img" aria-label="tennis racket and ball">🎾</span> GearTrack
@@ -70,8 +73,10 @@
             </button>
         </header>
 
+        <!-- Main Content Area -->
         <main id="mainContent" class="p-4"></main>
 
+        <!-- AI Commentary Modal -->
         <div id="aiCommentaryModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div class="bg-zinc-900 text-white p-6 rounded-xl shadow-2xl max-w-md w-full relative border-t-4 border-orange-500 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
                 <button id="closeCommentaryModal" class="absolute top-3 right-3 text-2xl text-gray-400 hover:text-white transition-colors" aria-label="Close">
@@ -114,6 +119,7 @@
             </div>
         </div>
 
+        <!-- Replacement Gear Modal -->
         <div id="replacementGearModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div class="bg-zinc-900 text-white p-6 rounded-xl shadow-2xl max-w-md w-full relative border-t-4 border-orange-500 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
                 <button id="closeReplacementGearModal" class="absolute top-3 right-3 text-2xl text-gray-400 hover:text-white transition-colors" aria-label="Close">
@@ -125,6 +131,7 @@
             </div>
         </div>
 
+        <!-- Bottom Navigation Bar -->
         <footer class="fixed-bottom-nav bg-zinc-800 text-white flex justify-around items-center h-16 shadow-lg border-t border-orange-700 flex-shrink-0">
             <button id="navHome" class="flex flex-col items-center p-2 rounded-lg transition-colors text-orange-400" aria-label="Home">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -255,8 +262,9 @@
         // --- Global State and Variables ---
         // Using an object to hold state for easier management in plain JS
         const appState = {
-            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'addGear'
+            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear'
             selectedSport: null,
+            selectedGearType: null, // New state for selected gear type (Racket, Shoes, etc.)
             commentaryGear: null,
             equipmentList: getInitialEquipmentList(),
             showReplacementGear: false,
@@ -270,6 +278,48 @@
             uploadedImageFile: null,
             autoTagResult: null,
         };
+
+        // Mock data for gear type details (e.g., Racket components, Shoe components)
+        const gearTypeDetailsData = {
+            Racket: {
+                description: "A tennis racket's performance relies on its frame integrity, grip condition, and string tension. Each component contributes to power, control, and comfort.",
+                categories: [
+                    { name: "Frame", score: 3, explanation: "Minor scuffs and a small crack near the throat. Affects stability and power transfer. (Overall Racket: 3/5)" },
+                    { name: "Grip", score: 4, explanation: "Overgrip is slightly worn but still provides decent tackiness. Base grip is firm." },
+                    { name: "Strings", score: 2, explanation: "Noticeable tension loss and some fraying. Leads to reduced control and power. (Overall Racket: 3/5)" },
+                ]
+            },
+            Shoes: {
+                description: "Tennis shoes are crucial for stability, traction, and cushioning. Wear patterns on the outsole, midsole, and upper can indicate performance degradation and injury risk.",
+                categories: [
+                    { name: "Outsole", score: 2, explanation: "Significant wear on the inner forefoot and heel, reducing court grip and increasing slip risk. (Overall Shoes: 2/5)" },
+                    { name: "Midsole", score: 3, explanation: "Some compression visible, indicating reduced cushioning. Still offers moderate support. (Overall Shoes: 2/5)" },
+                    { name: "Uppersole", score: 4, explanation: "Minor creasing and slight material fatigue. Still holds foot securely." },
+                ]
+            },
+            Balls: {
+                description: "Tennis balls lose pressure and felt over time, affecting bounce and flight. While less critical for injury, it impacts game quality.",
+                categories: [
+                    { name: "Felt", score: 4, explanation: "Minimal fuzzing, felt still largely intact." },
+                    { name: "Pressure", score: 4, explanation: "Good bounce, indicating decent internal pressure." },
+                ]
+            },
+            Court: {
+                description: "Court conditions directly impact player safety and game flow. Surface integrity is key to preventing slips and falls.",
+                categories: [
+                    { name: "Surface Integrity", score: 3, explanation: "Some visible cracks and uneven patches, requiring caution." },
+                    { name: "Line Markings", score: 4, explanation: "Lines are clear and visible." },
+                ]
+            },
+            Watch: { // For running watch example
+                description: "For smartwatches, physical integrity and sensor functionality are key for reliable performance tracking.",
+                categories: [
+                    { name: "Screen/Body", score: 5, explanation: "No scratches or damage to the screen or watch body." },
+                    { name: "Sensors", score: 5, explanation: "Heart rate and GPS sensors appear fully functional." },
+                ]
+            }
+        };
+
 
         const mainContent = document.getElementById('mainContent');
         const aiCommentaryModal = document.getElementById('aiCommentaryModal');
@@ -293,6 +343,8 @@
                 renderGameImprovementDetail();
             } else if (appState.appMode === 'gearList') {
                 renderGearList();
+            } else if (appState.appMode === 'gearTypeDetail') { // New mode
+                renderGearTypeDetail(appState.selectedGearType);
             } else if (appState.appMode === 'addGear') {
                 renderAddGear();
             }
@@ -302,9 +354,10 @@
             replacementGearModal.classList.toggle('hidden', !appState.showReplacementGear);
         }
 
-        function navigate(mode, sport = null) {
+        function navigate(mode, sport = null, gearType = null) { // Added gearType parameter
             appState.appMode = mode;
             appState.selectedSport = sport;
+            appState.selectedGearType = gearType; // Set selected gear type
             appState.commentaryGear = null;
             appState.showReplacementGear = false;
             appState.showIndividualAnalysisButtons = false;
@@ -329,7 +382,7 @@
                 document.getElementById('navHome').classList.add('text-orange-400');
             } else if (appState.appMode === 'addGear') {
                 document.getElementById('navAddGear').classList.add('text-orange-400');
-            } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail') {
+            } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail' || appState.appMode === 'gearTypeDetail') { // Updated for new modes
                 document.getElementById('navMyGear').classList.add('text-orange-400');
             }
         }
@@ -589,59 +642,85 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
-                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                            </svg>
-                        </button>
-                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear</h2>
-                    </div>
-                    <button id="toggleAnalysisButtons" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm">
-                        ${appState.showIndividualAnalysisButtons ? 'Hide AI Analysis' : 'Check AI Analysis on Gear'}
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
                     </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health</h2>
                 </div>
-                <div id="gearListContent"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearTypeCards"></div>
             `;
             mainContent.appendChild(div);
 
-            const gearListContent = div.querySelector('#gearListContent');
-            const filteredEquipment = appState.equipmentList.filter(item => item.sport === appState.selectedSport); // Filter dynamically
+            const gearTypeCardsContainer = div.querySelector('#gearTypeCards');
+            // Get unique gear types for the selected sport
+            const uniqueGearTypes = [...new Set(initialGearData[appState.selectedSport].map(item => item.name))];
 
-            if (filteredEquipment.length === 0) {
-                gearListContent.innerHTML = `<p class="text-gray-400 text-center mt-8">No gear added for ${appState.selectedSport} yet. Add some!</p>`;
-            } else {
-                filteredEquipment.forEach(item => {
-                    const gearCard = document.createElement('div');
-                    gearCard.className = 'mb-4 bg-zinc-900 text-white rounded-xl shadow-lg p-4 border border-zinc-700';
-                    gearCard.innerHTML = `
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                            <div class="mb-3 sm:mb-0 flex-grow">
-                                <h3 class="text-xl font-bold text-orange-300">${item.name}</h3>
-                                <p class="text-sm text-gray-300">${item.brand}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <p class="text-sm text-gray-300">Condition: <span class="font-semibold">${item.rating} / 5</span></p>
-                                    <div class="bg-orange-800 text-orange-200 font-bold px-3 py-1 rounded-full text-xs flex-shrink-0">
-                                        ${item.suggestion}
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="view-analysis-button bg-zinc-700 text-gray-300 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-zinc-600 transition-colors duration-300 flex-shrink-0 text-sm mt-2 sm:mt-0 ${appState.showIndividualAnalysisButtons ? '' : 'hidden'}">
-                                View Analysis
-                            </button>
-                        </div>
-                    `;
-                    gearCard.querySelector('.view-analysis-button').onclick = () => openCommentaryModal(item);
-                    gearListContent.appendChild(gearCard);
-                });
+            uniqueGearTypes.forEach(gearType => {
+                const card = document.createElement('div');
+                card.className = 'bg-zinc-900 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center';
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-orange-300 mb-2">${gearType}</h3>
+                    <p class="text-sm text-gray-400">View detailed analysis</p>
+                `;
+                card.onclick = () => navigate('gearTypeDetail', appState.selectedSport, gearType);
+                gearTypeCardsContainer.appendChild(card);
+            });
+        }
+
+        function renderGearTypeDetail(gearType) {
+            const gearDetail = gearTypeDetailsData[gearType];
+            if (!gearDetail) {
+                mainContent.innerHTML = `<p class="text-gray-400 text-center mt-8">Details for ${gearType} not found.</p>`;
+                return;
             }
 
-            div.querySelector('#toggleAnalysisButtons').onclick = () => {
-                appState.showIndividualAnalysisButtons = !appState.showIndividualAnalysisButtons;
-                render(); // Re-render to update button visibility
-            };
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearList', '${appState.selectedSport}')" aria-label="Back to Gear Health">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType} Details</h2>
+                </div>
+
+                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700">
+                    <p class="text-gray-300 mb-4">${gearDetail.description}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearSubCategories"></div>
+                </div>
+            `;
+            mainContent.appendChild(div);
+
+            const subCategoriesContainer = div.querySelector('#gearSubCategories');
+            gearDetail.categories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'bg-zinc-800 p-4 rounded-lg border border-zinc-700 shadow-md flex flex-col items-center text-center';
+                categoryCard.innerHTML = `
+                    <h4 class="text-lg font-bold text-orange-200 mb-2">${category.name}</h4>
+                    <div class="text-3xl font-extrabold mb-2 ${category.score <=2 ? 'text-red-500' : category.score <=3 ? 'text-yellow-500' : 'text-green-500'}">
+                        ${category.score} / 5
+                    </div>
+                    <p class="text-sm text-gray-400">${category.explanation}</p>
+                `;
+                subCategoriesContainer.appendChild(categoryCard);
+            });
+
+            // Find the overall gear item to link back to its full analysis
+            const overallItem = appState.equipmentList.find(item => item.sport === appState.selectedSport && item.name === gearType);
+            if (overallItem) {
+                const viewAnalysisButton = document.createElement('button');
+                viewAnalysisButton.className = 'bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-orange-600 transition-colors duration-300';
+                viewAnalysisButton.textContent = `View Full ${gearType} AI Analysis`;
+                viewAnalysisButton.onclick = () => openCommentaryModal(overallItem);
+                div.appendChild(viewAnalysisButton);
+            }
         }
+
 
         function renderAddGear() {
             const div = document.createElement('div');
