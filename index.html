@@ -10,7 +10,6 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            /* Ensure body and html are full height and allow main content to scroll */
             height: 100vh;
             overflow: hidden;
         }
@@ -18,14 +17,14 @@
             height: 100%;
         }
         #app-container {
-            height: 100%; /* Make app container fill the viewport height */
+            height: 100%;
             display: flex;
             flex-direction: column;
         }
         main {
-            flex-grow: 1; /* Allow main content to take available space */
-            overflow-y: auto; /* Enable vertical scrolling for main content */
-            padding-bottom: 5rem; /* Space for fixed bottom nav */
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-bottom: 5rem;
         }
         .fixed-bottom-nav {
             position: fixed;
@@ -41,27 +40,25 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-        /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #262626; /* zinc-800 */
+            background: #262626;
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #f97316; /* orange-500 */
+            background: #f97316;
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #ea580c; /* orange-600 */
+            background: #ea580c;
         }
     </style>
 </head>
 <body class="bg-black text-white">
 
     <div id="app-container">
-        <!-- Header -->
         <header class="p-4 bg-orange-600 flex items-center justify-between shadow-lg flex-shrink-0">
             <div class="text-xl font-bold text-white">
                 <span role="img" aria-label="tennis racket and ball">🎾</span> GearTrack
@@ -73,10 +70,8 @@
             </button>
         </header>
 
-        <!-- Main Content Area -->
         <main id="mainContent" class="p-4"></main>
 
-        <!-- AI Commentary Modal -->
         <div id="aiCommentaryModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div class="bg-zinc-900 text-white p-6 rounded-xl shadow-2xl max-w-md w-full relative border-t-4 border-orange-500 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
                 <button id="closeCommentaryModal" class="absolute top-3 right-3 text-2xl text-gray-400 hover:text-white transition-colors" aria-label="Close">
@@ -119,7 +114,6 @@
             </div>
         </div>
 
-        <!-- Replacement Gear Modal -->
         <div id="replacementGearModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div class="bg-zinc-900 text-white p-6 rounded-xl shadow-2xl max-w-md w-full relative border-t-4 border-orange-500 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
                 <button id="closeReplacementGearModal" class="absolute top-3 right-3 text-2xl text-gray-400 hover:text-white transition-colors" aria-label="Close">
@@ -131,7 +125,6 @@
             </div>
         </div>
 
-        <!-- Bottom Navigation Bar -->
         <footer class="fixed-bottom-nav bg-zinc-800 text-white flex justify-around items-center h-16 shadow-lg border-t border-orange-700 flex-shrink-0">
             <button id="navHome" class="flex flex-col items-center p-2 rounded-lg transition-colors text-orange-400" aria-label="Home">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -663,7 +656,6 @@
                     <h2 class="text-2xl font-semibold text-orange-400">Add New Gear</h2>
                 </div>
 
-                <!-- Manual Addition Section -->
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-8 border border-zinc-700">
                     <h3 class="text-xl font-bold text-orange-300 mb-4">Add Manually</h3>
                     <input type="text" id="newGearName" placeholder="Gear Name (e.g., My New Racket)" class="w-full p-3 mb-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500" value="${appState.newGearName}" />
@@ -681,7 +673,6 @@
                     </button>
                 </div>
 
-                <!-- Photo Upload & Auto-Tagging Section -->
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700 mb-8">
                     <h3 class="text-xl font-bold text-orange-300 mb-4">Upload Photo for Auto-Tagging</h3>
                     <label for="photo-upload" class="flex items-center justify-center p-4 mb-4 bg-zinc-800 border-2 border-dashed border-orange-500 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors duration-300 text-orange-400">
@@ -707,7 +698,6 @@
                     </div>
                 </div>
 
-                <!-- Browse Popular Gear Section -->
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
                     <h3 class="text-xl font-bold text-orange-300 mb-4">Browse Popular Gear</h3>
                     <div class="flex justify-center gap-2 mb-4" id="popularGearTypeButtons">
@@ -996,7 +986,7 @@
             document.getElementById('homeButtonHeader').onclick = () => navigate('sportsSelection');
             document.getElementById('navHome').onclick = () => navigate('sportsSelection');
             document.getElementById('navAddGear').onclick = () => navigate('addGear');
-            document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]);
+            document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]); // Default to first sport if none selected
             document.getElementById('navProfile').onclick = () => alert("Profile coming soon!");
 
             // Modal Close Buttons
