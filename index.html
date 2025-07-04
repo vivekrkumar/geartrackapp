@@ -199,23 +199,23 @@
                 { id: "tennis-racket-1", name: "Racket", brand: "Wilson Clash 100 V2", rating: 3, suggestion: "Average", lastReminderDate: "2025-06-15",
                   aiCommentary: "Your Wilson Clash 100 V2 shows visible frame wear near the throat, which can affect power strokes and stability, potentially leading to wrist strain. String tension feels loose, causing shots to fall deeper than expected. Consider restringing or replacement to prevent elbow tendonitis.",
                   injuries: [{ type: "Wrist Strain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Wrist" }, { type: "Elbow Tendonitis", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Elbow" }],
-                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Racket+V2", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
                 { id: "tennis-racket-2", name: "Racket", brand: "Wilson Clash 100 V1", rating: 4, suggestion: "Good", lastReminderDate: "2025-05-01",
                   aiCommentary: "Your Wilson Clash 100 V1 racket is in good condition, with minor cosmetic wear. Strings retain good tension. Keep monitoring for any changes in feel.",
                   injuries: [],
-                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Used+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Racket+V1", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
                 { id: "tennis-racket-3", name: "Racket", brand: "Wilson Clash 100 V2 Pro", rating: 2, suggestion: "Re-string", lastReminderDate: "2025-06-28", // New racket for alert
                   aiCommentary: "Your Wilson Clash 100 V2 Pro racket shows reduced string tension and minor frame fatigue. This will significantly affect control and power on your shots. Re-stringing is highly recommended to restore optimal performance.",
                   injuries: [{ type: "Wrist Strain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Wrist" }],
-                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Racket+V2P", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
                 { id: "tennis-shoes-1", name: "Shoes", brand: "Nike Vapour Zoom v9", rating: 2, suggestion: "Replace", lastReminderDate: "2025-06-20",
                   aiCommentary: "Your Nike shoes show significant wear on the inside sole, which is the critical landing spot for traction and stability. This uneven wear risks serious ankle sprains and reduced court grip, impacting quick directional changes. Heel cushioning is also compressed, increasing impact on knees.",
                   injuries: [{ type: "Ankle Sprain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Ankle" }, {type: "Knee Impact", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Knee"}],
-                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Shoes", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Shoes+V9", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
                 { id: "tennis-shoes-2", name: "Shoes", brand: "Adidas Ubersonic 4", rating: 3, suggestion: "Average", lastReminderDate: "2025-06-05",
                   aiCommentary: "The outsole of your Adidas Ubersonic 4 shoes shows moderate wear, particularly in high-pivot areas. Midsole still provides decent responsiveness, but monitor for reduced cushioning over time. Consider an upgrade if you feel less spring in your step.",
                   injuries: [{ type: "Foot Arch Pain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Foot" }],
-                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Used+Shoes", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Shoes+U4", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
                 { id: "tennis-balls-1", name: "Balls", brand: "Wilson Premier Court", rating: 4, suggestion: "Good",
                   aiCommentary: "Balls are in decent shape with consistent bounce. Minimal fuzzing indicates they still offer good aerodynamics for predictable shots. Keep monitoring for pressure loss or excessive fuzz.",
                   injuries: [],
@@ -403,7 +403,7 @@
             // document.body.style.overflow = (appState.commentaryGear || appState.showReplacementGear) ? 'hidden' : '';
         }
 
-        function navigate(mode, sport = null, gearType = null, gearItem = null) { // Added gearItem parameter
+        function navigate(mode, sport = null, gearType = null, gearItem = null) { // Added gearType parameter
             appState.appMode = mode;
             appState.selectedSport = sport;
             appState.selectedGearType = gearType; // Set selected gear type
@@ -715,17 +715,34 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center mb-6">
-                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearList', '${appState.selectedSport}')" aria-label="Back to Gear Health">
-                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                        </svg>
+                <div class="flex items-center justify-between mb-6"> <!-- Added justify-between -->
+                    <div class="flex items-center">
+                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearList', '${appState.selectedSport}')" aria-label="Back to Gear Health">
+                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType}s</h2>
+                    </div>
+                    <!-- Moved "View Full AI Analysis" button here -->
+                    <button id="viewFullAnalysisButton" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
+                        View Full AI Analysis
                     </button>
-                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType}s</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="specificGearItemsList"></div>
             `;
             mainContent.appendChild(div);
+
+            // Add event listener for the new "View Full AI Analysis" button
+            const viewFullAnalysisButton = document.getElementById('viewFullAnalysisButton');
+            // This button's click handler will be set dynamically based on which item's analysis is relevant
+            // For now, it will just alert as there isn't a single "full analysis" for the type, but for each item.
+            // This button might be better placed on the individual item's detail page, or trigger a list of all item analyses.
+            // Re-evaluating based on previous request: "When the user clicks Wilson Clash 100 V2 Pro, the current page showing racket performance and scoring should show."
+            // This implies the "View Full AI Analysis" button should be on the *specific item's* detail page, not the list of items of a type.
+            // So, I'll remove this button from here and keep it only on renderSpecificGearItemDetail.
+            // The request was: "view full AI Analysis (for rackets, shoes, balls and court) should be removed from bottom of the page and moved to the top right of each relevant page."
+            // This means the button should be on the `specificGearItemDetail` page.
 
             const specificGearItemsListContainer = div.querySelector('#specificGearItemsList');
             if (specificGearItems.length === 0) {
@@ -737,16 +754,16 @@
                     
                     let cardDisplayName = item.brand;
                     // Remove "Racket" or "Shoes" from display name if it's the item's type, not part of brand
-                    if (item.name === "Racket" && item.brand.includes("Wilson Clash")) {
-                        cardDisplayName = item.brand; // e.g., "Wilson Clash 100 V2 Pro"
-                    } else if (item.name === "Racket") {
-                        cardDisplayName = `${item.brand}`; // e.g., "Babolat" for a racket
-                    } else if (item.name === "Shoes" && item.brand.includes("Nike Vapour")) {
-                        cardDisplayName = item.brand; // e.g., "Nike Vapour Zoom v9"
+                    if (item.name === "Racket") {
+                        // If it's a racket, just use the brand directly for names like "Wilson Clash 100 V2 Pro"
+                        // This assumes the brand already includes the model name for rackets
+                        cardDisplayName = item.brand;
                     } else if (item.name === "Shoes") {
-                        cardDisplayName = `${item.brand}`; // e.g., "Adidas" for shoes
+                        // If it's shoes, just use the brand directly for names like "Nike Vapour Zoom v9"
+                        cardDisplayName = item.brand;
                     } else {
-                        cardDisplayName = `${item.brand} ${item.name}`; // Default for Balls, Court, Watch
+                        // For other types like Balls, Court, Watch, show brand and name
+                        cardDisplayName = `${item.brand} ${item.name}`;
                     }
                     
                     itemCard.innerHTML = `
@@ -772,13 +789,19 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center mb-6">
-                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearTypeDetail', '${appState.selectedSport}', '${gearType}')" aria-label="Back to ${gearType} List">
-                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                        </svg>
+                <div class="flex items-center justify-between mb-6"> <!-- Added justify-between -->
+                    <div class="flex items-center">
+                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearTypeDetail', '${appState.selectedSport}', '${gearType}')" aria-label="Back to ${gearType} List">
+                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-semibold text-orange-400">${item.brand} ${item.name} Details</h2>
+                    </div>
+                    <!-- Moved "View Full AI Analysis" button here -->
+                    <button id="viewFullAnalysisButton" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
+                        View Full AI Analysis
                     </button>
-                    <h2 class="text-2xl font-semibold text-orange-400">${item.brand} ${item.name} Details</h2>
                 </div>
 
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700">
@@ -787,6 +810,10 @@
                 </div>
             `;
             mainContent.appendChild(div);
+
+            // Add event listener for the new "View Full AI Analysis" button
+            document.getElementById('viewFullAnalysisButton').onclick = () => openCommentaryModal(item);
+
 
             const subComponentsContainer = div.querySelector('#gearSubComponents');
             gearDetail.categories.forEach(category => {
@@ -801,13 +828,6 @@
                 `;
                 subComponentsContainer.appendChild(componentCard);
             });
-
-            // Link to full AI Analysis for this specific item
-            const viewAnalysisButton = document.createElement('button');
-            viewAnalysisButton.className = 'bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-orange-600 transition-colors duration-300';
-            viewAnalysisButton.textContent = `View Full AI Analysis for this ${item.name}`;
-            viewAnalysisButton.onclick = () => openCommentaryModal(item);
-            div.appendChild(viewAnalysisButton);
         }
 
 
