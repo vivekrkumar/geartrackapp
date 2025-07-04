@@ -11,7 +11,7 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden; /* Prevent body scroll by default, controlled by JS */
         }
         html {
             height: 100%;
@@ -32,6 +32,10 @@
             left: 0;
             right: 0;
             z-index: 40;
+            transition: transform 0.3s ease-out; /* Smooth transition for hide/show */
+        }
+        .fixed-bottom-nav.hidden-nav {
+            transform: translateY(100%); /* Move completely out of view */
         }
         .animate-spin {
             animation: spin 1s linear infinite;
@@ -87,13 +91,14 @@
         <!-- Header -->
         <header class="p-4 bg-orange-600 flex items-center justify-between shadow-lg flex-shrink-0">
             <div class="flex items-center gap-2">
-                <!-- Updated Logo using provided URL -->
-                <img src="https://vivekrkumar.github.io/GearTrackLogo/" alt="GearTrack Logo" class="h-10 w-auto rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/120x40/333333/FFFFFF?text=Logo+Error';">
+                <!-- Updated Logo using a placeholder that visually matches your logo style -->
+                <img src="https://placehold.co/150x40/262626/FFFFFF?text=GearTrack+Logo" alt="GearTrack Logo" class="h-10 w-auto rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/120x40/333333/FFFFFF?text=Logo+Error';">
             </div>
             <button id="homeButtonHeader" class="p-2 rounded-full hover:bg-orange-700 transition-colors" aria-label="Home">
                 <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
+                <span class="sr-only">Home</span>
             </button>
         </header>
 
@@ -156,7 +161,7 @@
         </div>
 
         <!-- Bottom Navigation Bar -->
-        <footer class="fixed-bottom-nav bg-zinc-800 text-white flex justify-around items-center h-16 shadow-lg border-t border-orange-700 flex-shrink-0">
+        <footer id="bottomNavBar" class="fixed-bottom-nav bg-zinc-800 text-white flex justify-around items-center h-16 shadow-lg border-t border-orange-700 flex-shrink-0">
             <button id="navHome" class="flex flex-col items-center p-2 rounded-lg transition-colors text-orange-400" aria-label="Home">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -164,11 +169,11 @@
                 <span class="text-xs mt-1">Home</span>
             </button>
 
-            <button id="navAddGear" class="flex flex-col items-center p-2 rounded-lg transition-colors text-gray-400 hover:text-orange-300" aria-label="Add Gear">
+            <button id="navActivities" class="flex flex-col items-center p-2 rounded-lg transition-colors text-gray-400 hover:text-orange-300" aria-label="Activities">
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-3 3V9a9 9 0 110 18A9 9 0 0112 9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span class="text-xs mt-1">Add Gear</span>
+                <span class="text-xs mt-1">Activities</span>
             </button>
 
             <button id="navMyGear" class="flex flex-col items-center p-2 rounded-lg transition-colors text-gray-400 hover:text-orange-300" aria-label="My Gear">
@@ -188,17 +193,29 @@
     </div>
 
     <script>
-        // --- Data Definitions (Same as React Version) ---
+        // --- Data Definitions ---
         const initialGearData = {
             Tennis: [
                 { id: "tennis-racket-1", name: "Racket", brand: "Wilson Clash 100 V2", rating: 3, suggestion: "Average", lastReminderDate: "2025-06-15",
                   aiCommentary: "Your Wilson Clash 100 V2 shows visible frame wear near the throat, which can affect power strokes and stability, potentially leading to wrist strain. String tension feels loose, causing shots to fall deeper than expected. Consider restringing or replacement to prevent elbow tendonitis.",
                   injuries: [{ type: "Wrist Strain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Wrist" }, { type: "Elbow Tendonitis", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Elbow" }],
                   currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
+                { id: "tennis-racket-2", name: "Racket", brand: "Wilson Clash 100 V1", rating: 4, suggestion: "Good", lastReminderDate: "2025-05-01",
+                  aiCommentary: "Your Wilson Clash 100 V1 racket is in good condition, with minor cosmetic wear. Strings retain good tension. Keep monitoring for any changes in feel.",
+                  injuries: [],
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Used+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
+                { id: "tennis-racket-3", name: "Racket", brand: "Wilson Clash 100 V2 Pro", rating: 2, suggestion: "Re-string", lastReminderDate: "2025-06-28", // New racket for alert
+                  aiCommentary: "Your Wilson Clash 100 V2 Pro racket shows reduced string tension and minor frame fatigue. This will significantly affect control and power on your shots. Re-stringing is highly recommended to restore optimal performance.",
+                  injuries: [{ type: "Wrist Strain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Wrist" }],
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Racket", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Racket", sport: "Tennis" },
                 { id: "tennis-shoes-1", name: "Shoes", brand: "Nike Vapour Zoom v9", rating: 2, suggestion: "Replace", lastReminderDate: "2025-06-20",
                   aiCommentary: "Your Nike shoes show significant wear on the inside sole, which is the critical landing spot for traction and stability. This uneven wear risks serious ankle sprains and reduced court grip, impacting quick directional changes. Heel cushioning is also compressed, increasing impact on knees.",
                   injuries: [{ type: "Ankle Sprain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Ankle" }, {type: "Knee Impact", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Knee"}],
                   currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Worn+Shoes", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
+                { id: "tennis-shoes-2", name: "Shoes", brand: "Adidas Ubersonic 4", rating: 3, suggestion: "Average", lastReminderDate: "2025-06-05",
+                  aiCommentary: "The outsole of your Adidas Ubersonic 4 shoes shows moderate wear, particularly in high-pivot areas. Midsole still provides decent responsiveness, but monitor for reduced cushioning over time. Consider an upgrade if you feel less spring in your step.",
+                  injuries: [{ type: "Foot Arch Pain", image: "https://placehold.co/40x40/FF5722/FFFFFF?text=Foot" }],
+                  currentImage: "https://placehold.co/100x100/333333/FFFFFF?text=Used+Shoes", idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal+Shoes", sport: "Tennis" },
                 { id: "tennis-balls-1", name: "Balls", brand: "Wilson Premier Court", rating: 4, suggestion: "Good",
                   aiCommentary: "Balls are in decent shape with consistent bounce. Minimal fuzzing indicates they still offer good aerodynamics for predictable shots. Keep monitoring for pressure loss or excessive fuzz.",
                   injuries: [],
@@ -286,9 +303,10 @@
         // --- Global State and Variables ---
         // Using an object to hold state for easier management in plain JS
         const appState = {
-            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear'
+            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear', 'specificGearItemDetail'
             selectedSport: null,
             selectedGearType: null, // New state for selected gear type (Racket, Shoes, etc.)
+            selectedGearItem: null, // New state to hold the specific gear item for detail view
             commentaryGear: null,
             equipmentList: getInitialEquipmentList(),
             showReplacementGear: false,
@@ -348,6 +366,7 @@
         const mainContent = document.getElementById('mainContent');
         const aiCommentaryModal = document.getElementById('aiCommentaryModal');
         const replacementGearModal = document.getElementById('replacementGearModal');
+        const bottomNavBar = document.getElementById('bottomNavBar'); // Get the bottom nav bar element
 
         // --- Helper Functions ---
 
@@ -369,6 +388,8 @@
                 renderGearList();
             } else if (appState.appMode === 'gearTypeDetail') { // New mode
                 renderGearTypeDetail(appState.selectedGearType);
+            } else if (appState.appMode === 'specificGearItemDetail') { // New mode for individual gear item details
+                renderSpecificGearItemDetail(appState.appState.selectedGearItem); // Pass the specific item
             } else if (appState.appMode === 'addGear') {
                 renderAddGear();
             }
@@ -376,12 +397,17 @@
             // Manage modal visibility
             aiCommentaryModal.classList.toggle('hidden', !appState.commentaryGear);
             replacementGearModal.classList.toggle('hidden', !appState.showReplacementGear);
+
+            // Control body scroll based on modal visibility
+            // This is now handled by the main content area's overflow-y-auto
+            // document.body.style.overflow = (appState.commentaryGear || appState.showReplacementGear) ? 'hidden' : '';
         }
 
-        function navigate(mode, sport = null, gearType = null) { // Added gearType parameter
+        function navigate(mode, sport = null, gearType = null, gearItem = null) { // Added gearItem parameter
             appState.appMode = mode;
             appState.selectedSport = sport;
             appState.selectedGearType = gearType; // Set selected gear type
+            appState.selectedGearItem = gearItem; // Set selected gear item
             appState.commentaryGear = null;
             appState.showReplacementGear = false;
             appState.showIndividualAnalysisButtons = false;
@@ -404,10 +430,12 @@
 
             if (appState.appMode === 'sportsSelection') {
                 document.getElementById('navHome').classList.add('text-orange-400');
-            } else if (appState.appMode === 'addGear') {
-                document.getElementById('navAddGear').classList.add('text-orange-400');
-            } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail' || appState.appMode === 'gearTypeDetail') { // Updated for new modes
+            } else if (appState.appMode === 'addGear') { // Add Gear is now on gearList page, but keep nav logic if needed elsewhere
+                // document.getElementById('navAddGear').classList.add('text-orange-400'); // Removed from bottom nav
+            } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail' || appState.appMode === 'gearTypeDetail' || appState.appMode === 'specificGearItemDetail') { // Updated for new modes
                 document.getElementById('navMyGear').classList.add('text-orange-400');
+            } else if (appState.appMode === 'activities') { // New activities mode
+                document.getElementById('navActivities').classList.add('text-orange-400');
             }
         }
 
@@ -474,39 +502,27 @@
         function renderSummaryView() {
             const currentDate = new Date('2025-07-03'); // Mock current date
 
-            const urgentReplacementGear = appState.equipmentList.filter(item => item.suggestion === 'Replace');
-            const alerts = urgentReplacementGear.map(item => {
-                let daysSince = 'N/A';
-                if (item.lastReminderDate) {
-                    const reminderDate = new Date(item.lastReminderDate);
-                    const diffTime = Math.abs(currentDate.getTime() - reminderDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    daysSince = diffDays;
-                }
-                return {
-                    id: item.id,
-                    type: 'warning',
-                    message: `${item.name} (${item.brand}) needs urgent replacement. Reminder sent ${daysSince} days ago.`,
-                    daysSinceReminder: daysSince,
-                };
-            });
-
-            if (alerts.length === 0) {
-                alerts.push({ id: 'no-urgent-gear', type: 'info', message: 'No urgent gear replacements needed at this time!' });
-                alerts.push({ id: 'general-tip', type: 'success', message: 'All your current gear is in good health or being monitored.' });
+            // Specific alerts as requested
+            const summaryAlerts = [];
+            const nikeShoes = appState.equipmentList.find(item => item.name === 'Shoes' && item.brand === 'Nike Vapour Zoom v9' && item.sport === appState.selectedSport);
+            if (nikeShoes && nikeShoes.suggestion === 'Replace') {
+                summaryAlerts.push({ id: 'shoes-replace', type: 'warning', message: `Shoes (${nikeShoes.brand}) need urgent replacement.`, gearItem: nikeShoes });
             }
-            alerts.push({ id: 'general-tip-2', type: 'info', message: 'Remember to check your string tension regularly for optimal play.' });
+            const wilsonRacketPro = appState.equipmentList.find(item => item.name === 'Racket' && item.brand === 'Wilson Clash 100 V2 Pro' && item.sport === appState.selectedSport);
+            if (wilsonRacketPro && wilsonRacketPro.suggestion === 'Re-string') {
+                summaryAlerts.push({ id: 'racket-restring', type: 'warning', message: `Tennis Racket (${wilsonRacketPro.brand}) needs re-stringing due to reduced tension.`, gearItem: wilsonRacketPro });
+            }
+            // Add a fallback alert if no specific ones are triggered
+            if (summaryAlerts.length === 0) {
+                summaryAlerts.push({ id: 'no-urgent-gear', type: 'info', message: 'No urgent gear alerts at this time!' });
+            }
 
             const mockSummaryData = {
-                alerts: alerts,
-                recentActivities: [
-                    { id: 1, activity: 'Logged Tennis session', date: '2025-07-01' },
-                    { id: 2, activity: 'Viewed Racket analysis', date: '2025-06-30' },
-                    { id: 3, activity: 'Added new running shoes', date: '2025-06-28' },
-                ],
+                alerts: summaryAlerts,
                 injuriesAvoided: 5,
                 gameImprovementScore: 15,
-                overallGearHealth: 'Good',
+                preferredRacket: 'Wilson Clash 100 V2 Pro', // New preferred racket
+                preferredShoes: 'Nike Vapor Zoom v9', // New preferred shoes
             };
 
             const div = document.createElement('div');
@@ -521,47 +537,25 @@
                     <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Summary</h2>
                 </div>
 
-                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700 text-center">
-                    <h3 class="text-xl font-bold text-orange-300 mb-2">Overall Gear Health</h3>
-                    <p class="text-4xl font-extrabold text-orange-500">${mockSummaryData.overallGearHealth}</p>
-                    <p class="text-gray-400 text-sm mt-1">Based on recent analyses</p>
-                </div>
-
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700">
                     <h3 class="text-xl font-bold text-orange-300 mb-4">Alerts</h3>
-                    <div class="space-y-3">
-                        ${mockSummaryData.alerts.map(alert => `
-                            <div class="p-3 rounded-lg flex items-center gap-3 ${
-                                alert.type === 'warning' ? 'bg-yellow-900 text-yellow-200 border border-yellow-700' : ''
-                            }${
-                                alert.type === 'info' ? 'bg-blue-900 text-blue-200 border border-blue-700' : ''
-                            }${
-                                alert.type === 'success' ? 'bg-green-900 text-green-200 border border-green-700' : ''
-                            }">
-                                ${alert.type === 'warning' ? '<span role="img" aria-label="warning">⚠️</span>' : ''}
-                                ${alert.type === 'info' ? '<span role="img" aria-label="info">ℹ️</span>' : ''}
-                                ${alert.type === 'success' ? '<span role="img" aria-label="success">✅</span>' : ''}
-                                <p class="text-sm flex-grow">${alert.message}</p>
-                            </div>
-                        `).join('')}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="summaryAlertsContainer">
+                        <!-- Alerts will be rendered here -->
                     </div>
                 </div>
-
+                
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700">
-                    <h3 class="text-xl font-bold text-orange-300 mb-4">Urgent Replacement Needed</h3>
-                    ${urgentReplacementGear.length > 0 ? `
-                        <div class="space-y-3">
-                            ${urgentReplacementGear.map(gear => `
-                                <div class="p-3 bg-red-900 text-red-200 rounded-lg border border-red-700 flex items-center gap-3">
-                                    <span role="img" aria-label="alert">🚨</span>
-                                    <p class="text-sm flex-grow">
-                                        <strong>${gear.name} (${gear.brand})</strong> - Needs replacement.
-                                        ${gear.lastReminderDate ? ` Reminder sent ${gear.daysSinceReminder} days ago.` : ''}
-                                    </p>
-                                </div>
-                            `).join('')}
+                    <h3 class="text-xl font-bold text-orange-300 mb-4">Preferred Gear</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-zinc-800 p-4 rounded-lg border border-zinc-700 text-center">
+                            <h4 class="text-lg font-bold text-orange-200 mb-1">Preferred Racket</h4>
+                            <p class="text-gray-300">${mockSummaryData.preferredRacket}</p>
                         </div>
-                    ` : `<p class="text-gray-400 text-center">No gear requires urgent replacement.</p>`}
+                        <div class="bg-zinc-800 p-4 rounded-lg border border-zinc-700 text-center">
+                            <h4 class="text-lg font-bold text-orange-200 mb-1">Preferred Shoes</h4>
+                            <p class="text-gray-300">${mockSummaryData.preferredShoes}</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="injuriesAvoidedCard" class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700 text-center cursor-pointer hover:bg-zinc-800 transition-colors">
@@ -575,22 +569,31 @@
                     <p class="text-4xl font-extrabold text-blue-400">${mockSummaryData.gameImprovementScore}%</p>
                     <p class="text-gray-400 text-sm mt-1">Based on coaching inputs & performance tracking</p>
                 </div>
-
-                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
-                    <h3 class="text-xl font-bold text-orange-300 mb-4">Recent Activities</h3>
-                    ${mockSummaryData.recentActivities.length > 0 ? `
-                        <div class="space-y-2">
-                            ${mockSummaryData.recentActivities.map(activity => `
-                                <div class="flex justify-between items-center text-gray-300 text-sm">
-                                    <span>${activity.activity}</span>
-                                    <span class="text-gray-500">${activity.date}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : `<p class="text-gray-400 text-center">No recent activities.</p>`}
-                </div>
             `;
             mainContent.appendChild(div);
+
+            const summaryAlertsContainer = div.querySelector('#summaryAlertsContainer');
+            if (mockSummaryData.alerts.length > 0) {
+                mockSummaryData.alerts.forEach(alert => {
+                    const alertCard = document.createElement('div');
+                    alertCard.className = `p-3 rounded-lg flex flex-col items-center text-center gap-1 cursor-pointer bg-orange-700 text-white`; // Orange with white text
+                    alertCard.innerHTML = `
+                        ${alert.type === 'warning' ? '<span role="img" aria-label="warning" class="text-2xl">⚠️</span>' : ''}
+                        ${alert.type === 'info' ? '<span role="img" aria-label="info" class="text-2xl">ℹ️</span>' : ''}
+                        ${alert.type === 'success' ? '<span role="img" aria-label="success" class="text-2xl">✅</span>' : ''}
+                        <p class="text-sm font-semibold">${alert.message}</p>
+                    `;
+                    // Make alert card clickable to go to specific gear item detail
+                    if (alert.gearItem) {
+                        alertCard.onclick = () => navigate('specificGearItemDetail', appState.selectedSport, alert.gearItem.name, alert.gearItem);
+                    } else {
+                        alertCard.onclick = () => alert(alert.message); // Just show alert for general tips
+                    }
+                    summaryAlertsContainer.appendChild(alertCard);
+                });
+            } else {
+                summaryAlertsContainer.innerHTML = `<p class="text-gray-400 text-center">No new alerts.</p>`;
+            }
 
             // Add event listeners for the new clickable cards
             document.getElementById('injuriesAvoidedCard').onclick = () => navigate('injuriesAvoidedDetail', appState.selectedSport);
@@ -666,20 +669,32 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center mb-6">
-                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
-                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
+                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                            </svg>
+                        </button>
+                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health</h2>
+                    </div>
+                    <!-- Moved Add Gear button here -->
+                    <button id="addGearButtonTopRight" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-3 3V9a9 9 0 110 18A9 9 0 0112 9z" />
                         </svg>
+                        Add Gear
                     </button>
-                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearTypeCards"></div>
             `;
             mainContent.appendChild(div);
 
+            // Add event listener for the new Add Gear button
+            document.getElementById('addGearButtonTopRight').onclick = () => navigate('addGear');
+
             const gearTypeCardsContainer = div.querySelector('#gearTypeCards');
-            // Get unique gear types for the selected sport
+            // Get unique gear types for the selected sport from the equipmentList
             const uniqueGearTypes = [...new Set(initialGearData[appState.selectedSport].map(item => item.name))];
 
             uniqueGearTypes.forEach(gearType => {
@@ -689,17 +704,15 @@
                     <h3 class="text-xl font-bold text-orange-300 mb-2">${gearType}</h3>
                     <p class="text-sm text-gray-400">View detailed analysis</p>
                 `;
+                // When a gear type is clicked, navigate to a new page listing specific items of that type
                 card.onclick = () => navigate('gearTypeDetail', appState.selectedSport, gearType);
                 gearTypeCardsContainer.appendChild(card);
             });
         }
 
         function renderGearTypeDetail(gearType) {
-            const gearDetail = gearTypeDetailsData[gearType];
-            if (!gearDetail) {
-                mainContent.innerHTML = `<p class="text-gray-400 text-center mt-8">Details for ${gearType} not found.</p>`;
-                return;
-            }
+            // Filter equipmentList for the specific gearType within the selectedSport
+            const specificGearItems = appState.equipmentList.filter(item => item.sport === appState.selectedSport && item.name === gearType);
 
             const div = document.createElement('div');
             div.className = 'p-2';
@@ -710,39 +723,129 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
                         </svg>
                     </button>
-                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType} Details</h2>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} ${gearType}s</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="specificGearItemsList"></div>
+            `;
+            mainContent.appendChild(div);
+
+            const specificGearItemsListContainer = div.querySelector('#specificGearItemsList');
+            if (specificGearItems.length === 0) {
+                specificGearItemsListContainer.innerHTML = `<p class="text-gray-400 text-center mt-8">No ${gearType} items found for ${appState.selectedSport}.</p>`;
+            } else {
+                specificGearItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'bg-zinc-900 text-white rounded-xl shadow-lg p-4 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center';
+                    
+                    let displayName = item.brand;
+                    if (item.name === "Racket" || item.name === "Shoes") { // Remove "Racket" or "Shoes" from display name
+                        displayName += ` ${item.name === "Racket" ? item.name.replace('Racket', '') : item.name.replace('Shoes', '')} ${item.name}`; // Keep original name for consistency in data, but display only brand
+                        displayName = item.brand + ' ' + item.name.replace(item.name, item.name.includes('Racket') ? item.name.replace('Racket', '') : item.name.includes('Shoes') ? item.name.replace('Shoes', '') : item.name);
+                        // Simplified display name logic
+                        displayName = item.brand;
+                        if (item.name === "Racket") {
+                           displayName += ` ${item.name.replace('Racket', '')}`; // If it's a racket, just show brand and model
+                        } else if (item.name === "Shoes") {
+                           displayName += ` ${item.name.replace('Shoes', '')}`; // If it's shoes, just show brand and model
+                        }
+                        // For specific items like "Wilson Clash 100 V2 Pro"
+                        if (item.brand.includes('Wilson Clash')) { // Special handling for Wilson Clash rackets
+                            displayName = item.brand;
+                        } else if (item.brand.includes('Nike Vapour')) { // Special handling for Nike shoes
+                            displayName = item.brand;
+                        } else {
+                            displayName = `${item.brand} ${item.name}`; // Default for others
+                        }
+                        // Corrected logic for removing "Racket" from racket names
+                        if (item.name === "Racket") {
+                            displayName = `${item.brand} ${item.name.replace('Racket', '').trim()}`;
+                            if (item.brand.includes('Wilson Clash')) { // Special case for Wilson Clash rackets
+                                displayName = item.brand; // Keep full brand name if it includes "Racket" in its own data
+                            }
+                        } else if (item.name === "Shoes") {
+                            displayName = `${item.brand} ${item.name.replace('Shoes', '').trim()}`;
+                        } else {
+                            displayName = `${item.brand} ${item.name}`;
+                        }
+                        // Final refined logic for item display names
+                        let cardDisplayName = item.brand;
+                        if (item.name === "Racket" && item.brand.includes("Wilson Clash")) {
+                            cardDisplayName = item.brand; // Keep full name like "Wilson Clash 100 V2 Pro"
+                        } else if (item.name === "Racket") {
+                            cardDisplayName = `${item.brand} ${item.name}`; // "Yonex Astrox 88S Racket"
+                        } else if (item.name === "Shoes" && item.brand.includes("Nike Vapour")) {
+                            cardDisplayName = item.brand; // Keep full name like "Nike Vapour Zoom v9"
+                        } else if (item.name === "Shoes") {
+                            cardDisplayName = `${item.brand} ${item.name}`; // "Li-Ning Saga Shoes"
+                        } else {
+                            cardDisplayName = `${item.brand} ${item.name}`; // Default for Balls, Court, Watch
+                        }
+                        // Refined logic for removal of worn/used images
+                        let imageSrc = item.currentImage;
+                        if (item.name === "Racket" || item.name === "Shoes") {
+                            // No change, keep currentImage as it's a placeholder for the item itself, not "worn" status
+                        }
+
+
+                    itemCard.innerHTML = `
+                        <img src="${imageSrc}" alt="${cardDisplayName}" class="h-24 w-24 object-contain rounded-md mb-2 border border-zinc-700" onerror="this.onerror=null;this.src='https://placehold.co/96x96/333333/FFFFFF?text=Item';" />
+                        <h3 class="text-xl font-bold text-orange-300 mb-1">${cardDisplayName}</h3>
+                    `;
+                    // When a specific gear item is clicked, navigate to its detailed performance scoring page
+                    itemCard.onclick = () => navigate('specificGearItemDetail', appState.selectedSport, gearType, item);
+                    specificGearItemsListContainer.appendChild(itemCard);
+                });
+            }
+        }
+
+        function renderSpecificGearItemDetail(item) {
+            const gearType = item.name; // e.g., "Racket" or "Shoes"
+            const gearDetail = gearTypeDetailsData[gearType]; // Get the component details for this gear type
+
+            if (!gearDetail) {
+                mainContent.innerHTML = `<p class="text-gray-400 text-center mt-8">Details for ${gearType} components not found.</p>`;
+                return;
+            }
+
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('gearTypeDetail', '${appState.selectedSport}', '${gearType}')" aria-label="Back to ${gearType} List">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${item.brand} ${item.name} Details</h2>
                 </div>
 
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg mb-6 border border-zinc-700">
                     <p class="text-gray-300 mb-4">${gearDetail.description}</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearSubCategories"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="gearSubComponents"></div>
                 </div>
             `;
             mainContent.appendChild(div);
 
-            const subCategoriesContainer = div.querySelector('#gearSubCategories');
+            const subComponentsContainer = div.querySelector('#gearSubComponents');
             gearDetail.categories.forEach(category => {
-                const categoryCard = document.createElement('div');
-                categoryCard.className = 'bg-zinc-800 p-4 rounded-lg border border-zinc-700 shadow-md flex flex-col items-center text-center';
-                categoryCard.innerHTML = `
+                const componentCard = document.createElement('div');
+                componentCard.className = 'bg-zinc-800 p-4 rounded-lg border border-zinc-700 shadow-md flex flex-col items-center text-center';
+                componentCard.innerHTML = `
                     <h4 class="text-lg font-bold text-orange-200 mb-2">${category.name}</h4>
                     <div class="text-3xl font-extrabold mb-2 ${category.score <=2 ? 'text-red-500' : category.score <=3 ? 'text-yellow-500' : 'text-green-500'}">
                         ${category.score} / 5
                     </div>
                     <p class="text-sm text-gray-400">${category.explanation}</p>
                 `;
-                subCategoriesContainer.appendChild(categoryCard);
+                subComponentsContainer.appendChild(componentCard);
             });
 
-            // Find the overall gear item to link back to its full analysis
-            const overallItem = appState.equipmentList.find(item => item.sport === appState.selectedSport && item.name === gearType);
-            if (overallItem) {
-                const viewAnalysisButton = document.createElement('button');
-                viewAnalysisButton.className = 'bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-orange-600 transition-colors duration-300';
-                viewAnalysisButton.textContent = `View Full ${gearType} AI Analysis`;
-                viewAnalysisButton.onclick = () => openCommentaryModal(overallItem);
-                div.appendChild(viewAnalysisButton);
-            }
+            // Link to full AI Analysis for this specific item
+            const viewAnalysisButton = document.createElement('button');
+            viewAnalysisButton.className = 'bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-6 hover:bg-orange-600 transition-colors duration-300';
+            viewAnalysisButton.textContent = `View Full AI Analysis for this ${item.name}`;
+            viewAnalysisButton.onclick = () => openCommentaryModal(item);
+            div.appendChild(viewAnalysisButton);
         }
 
 
@@ -1096,6 +1199,7 @@
             document.getElementById('navHome').onclick = () => navigate('sportsSelection');
             document.getElementById('navAddGear').onclick = () => navigate('addGear');
             document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]); // Default to first sport if none selected
+            document.getElementById('navActivities').onclick = () => alert("Activities page coming soon!"); // New Activities button
             document.getElementById('navProfile').onclick = () => alert("Profile coming soon!");
 
             // Modal Close Buttons
@@ -1106,6 +1210,23 @@
             
             // AI Maintenance Tips button inside commentary modal
             document.getElementById('getAiMaintenanceTipsButton').onclick = () => getAiMaintenanceTips(appState.commentaryGear);
+
+            // Auto-hide bottom nav after 3 seconds
+            setTimeout(() => {
+                bottomNavBar.classList.add('hidden-nav');
+            }, 3000);
+
+            // Show bottom nav on scroll down
+            let lastScrollTop = 0;
+            mainContent.addEventListener('scroll', function() {
+                const st = mainContent.scrollTop;
+                if (st > lastScrollTop && st > 50) { // Scrolling down and not at the very top
+                    bottomNavBar.classList.add('hidden-nav');
+                } else if (st < lastScrollTop) { // Scrolling up
+                    bottomNavBar.classList.remove('hidden-nav');
+                }
+                lastScrollTop = st;
+            });
 
 
             render(); // Initial render of the app
