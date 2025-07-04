@@ -316,7 +316,7 @@
         // --- Global State and Variables ---
         // Using an object to hold state for easier management in plain JS
         const appState = {
-            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear', 'specificGearItemDetail', 'activities', 'playLogsDetail', 'addPlayLog'
+            appMode: 'sportsSelection', // 'sportsSelection', 'sportDashboard', 'summaryView', 'injuriesAvoidedDetail', 'gameImprovementDetail', 'gearList', 'gearTypeDetail', 'addGear', 'specificGearItemDetail', 'activities', 'playLogsDetail', 'addPlayLog', 'trendsSelection', 'performanceTrendsPage', 'gearHealthTrendsPage'
             selectedSport: null,
             selectedGearType: null, // New state for selected gear type (Racket, Shoes, etc.)
             selectedGearItem: null, // New state to hold the specific gear item for detail view
@@ -332,49 +332,25 @@
             newGearSport: 'Tennis',
             uploadedImageFile: null,
             autoTagResult: null,
+            playLogPhotos: { racketBefore: null, racketAfter: null, shoesBefore: null, shoesAfter: null }, // For add play log photos
+            playLogSets: 0, // For score input
+            playLogScores: [], // Array of {gamesWon, gamesLost} for each set
+            selectedTrendPeriod: 'weekly', // 'weekly' or 'monthly'
         };
 
-        // Mock data for gear type details (e.g., Racket components, Shoe components)
-        const gearTypeDetailsData = {
-            Racket: {
-                description: "A tennis racket's performance relies on its frame integrity, grip condition, and string tension. Each component contributes to power, control, and comfort.",
-                categories: [
-                    { name: "Frame", score: 3, explanation: "Minor scuffs and a small crack near the throat. Affects stability and power transfer. (Overall Racket: 3/5)" },
-                    { name: "Grip", score: 4, explanation: "Overgrip is slightly worn but still provides decent tackiness. Base grip is firm." },
-                    { name: "Strings", score: 2, explanation: "Noticeable tension loss and some fraying. Leads to reduced control and power. (Overall Racket: 3/5)" },
-                ]
-            },
-            Shoes: {
-                description: "Tennis shoes are crucial for stability, traction, and cushioning. Wear patterns on the outsole, midsole, and upper can indicate performance degradation and injury risk.",
-                categories: [
-                    { name: "Outsole", score: 2, explanation: "Significant wear on the inner forefoot and heel, reducing court grip and increasing slip risk. (Overall Shoes: 2/5)" },
-                    { name: "Midsole", score: 3, explanation: "Some compression visible, indicating reduced cushioning. Still offers moderate support. (Overall Shoes: 2/5)" },
-                    { name: "Uppersole", score: 4, explanation: "Minor creasing and slight material fatigue. Still holds foot securely." },
-                ]
-            },
-            Balls: {
-                description: "Tennis balls lose pressure and felt over time, affecting bounce and flight. While less critical for injury, it impacts game quality.",
-                categories: [
-                    { name: "Felt", score: 4, explanation: "Minimal fuzzing, felt still largely intact." },
-                    { name: "Pressure", score: 4, explanation: "Good bounce, indicating decent internal pressure." },
-                ]
-            },
-            Court: {
-                description: "Court conditions directly impact player safety and game flow. Surface integrity is key to preventing slips and falls.",
-                categories: [
-                    { name: "Surface Integrity", score: 3, explanation: "Some visible cracks and uneven patches, requiring caution." },
-                    { name: "Line Markings", score: 4, explanation: "Lines are clear and visible." },
-                ]
-            },
-            Watch: { // For running watch example
-                description: "For smartwatches, physical integrity and sensor functionality are key for reliable performance tracking.",
-                categories: [
-                    { name: "Screen/Body", score: 5, explanation: "No scratches or damage to the screen or watch body." },
-                    { name: "Sensors", score: 5, explanation: "Heart rate and GPS sensors appear fully functional." },
-                ]
-            }
+        // Mock Play Logs Data (can be expanded)
+        const mockPlayLogs = {
+            Tennis: [
+                { date: '2025-07-01', duration: '1.5', singles: '1', doubles: '0.5', cans: 1, sets: [{won: 6, lost: 4}, {won: 3, lost: 6}, {won: 7, lost: 5}] },
+                { date: '2025-07-03', duration: '2', singles: '0.5', doubles: '1.5', cans: 1, sets: [{won: 6, lost: 2}, {won: 6, lost: 4}] },
+                { date: '2025-07-04', duration: '1', singles: '1', doubles: '0', cans: 0, sets: [{won: 6, lost: 3}] },
+                { date: '2025-07-06', duration: '2.5', singles: '1.5', doubles: '1', cans: 1, sets: [{won: 7, lost: 6}, {won: 6, lost: 3}, {won: 4, lost: 6}] },
+                { date: '2025-07-07', duration: '1', singles: '0', doubles: '1', cans: 0, sets: [{won: 2, lost: 6}] },
+            ],
+            Badminton: [
+                { date: '2025-06-29', duration: '1', singles: '1', doubles: '0', cans: 0, sets: [{won: 21, lost: 15}, {won: 21, lost: 18}] },
+            ]
         };
-
 
         const mainContent = document.getElementById('mainContent');
         const aiCommentaryModal = document.getElementById('aiCommentaryModal');
@@ -413,6 +389,12 @@
                 renderPlayLogsDetail();
             } else if (appState.appMode === 'addPlayLog') {
                 renderAddPlayLogPage();
+            } else if (appState.appMode === 'trendsSelection') {
+                renderTrendsSelectionPage();
+            } else if (appState.appMode === 'performanceTrendsPage') {
+                renderPerformanceTrendsPage();
+            } else if (appState.appMode === 'gearHealthTrendsPage') {
+                renderGearHealthTrendsPage();
             }
 
             // Manage modal visibility
@@ -441,6 +423,9 @@
             appState.uploadedImageFile = null;
             appState.autoTagResult = null;
             appState.selectedPopularGearType = 'Racket';
+            appState.playLogSets = 0; // Reset play log score inputs
+            appState.playLogScores = []; // Reset play log score inputs
+            appState.selectedTrendPeriod = 'weekly'; // Reset trend period
             render();
         }
 
@@ -456,7 +441,7 @@
                 // document.getElementById('navAddGear').classList.add('text-orange-400'); // Removed from bottom nav
             } else if (appState.appMode === 'gearList' || appState.appMode === 'sportDashboard' || appState.appMode === 'summaryView' || appState.appMode === 'injuriesAvoidedDetail' || appState.appMode === 'gameImprovementDetail' || appState.appMode === 'gearTypeDetail' || appState.appMode === 'specificGearItemDetail') { // Updated for new modes
                 document.getElementById('navMyGear').classList.add('text-orange-400');
-            } else if (appState.appMode === 'activities' || appState.appMode === 'playLogsDetail' || appState.appMode === 'addPlayLog') { // New activities mode
+            } else if (appState.appMode === 'activities' || appState.appMode === 'playLogsDetail' || appState.appMode === 'addPlayLog' || appState.appMode === 'trendsSelection' || appState.appMode === 'performanceTrendsPage' || appState.appMode === 'gearHealthTrendsPage') { // New activities mode
                 document.getElementById('navActivities').classList.add('text-orange-400');
             }
         }
@@ -1225,7 +1210,10 @@
                 optionDiv.onclick = () => {
                     if (option.name === 'Play Logs') {
                         navigate('playLogsDetail', appState.selectedSport);
-                    } else {
+                    } else if (option.name === 'Trends') {
+                        navigate('trendsSelection', appState.selectedSport);
+                    }
+                    else {
                         alert(`${option.name} feature coming soon!`);
                     }
                 };
@@ -1235,22 +1223,22 @@
 
         // --- New Play Logs Detail Page Render ---
         function renderPlayLogsDetail() {
-            const mockPlayLogs = {
+            const mockPlayLogsSummary = { // Summary for last 7 days
                 daysPlayed: 5,
                 avgPlayDuration: "1.5 hours",
                 avgSinglesHours: "0.8 hours",
                 avgDoublesHours: "0.7 hours",
                 newCansUsed: 3,
-                last7Days: [
-                    { date: 'Mon, Jul 1', played: true, duration: '1.5h', singles: '1h', doubles: '0.5h', cans: 1 },
-                    { date: 'Tue, Jul 2', played: false },
-                    { date: 'Wed, Jul 3', played: true, duration: '2h', singles: '0.5h', doubles: '1.5h', cans: 1 },
-                    { date: 'Thu, Jul 4', played: true, duration: '1h', singles: '1h', doubles: '0h', cans: 0 },
-                    { date: 'Fri, Jul 5', played: false },
-                    { date: 'Sat, Jul 6', played: true, duration: '2.5h', singles: '1.5h', doubles: '1h', cans: 1 },
-                    { date: 'Sun, Jul 7', played: true, duration: '1h', singles: '0h', doubles: '1h', cans: 0 },
-                ]
             };
+            const mockPlayLogsDaily = [ // Detailed daily breakdown
+                { date: 'Mon, Jul 1', played: true, duration: '1.5h', singles: '1h', doubles: '0.5h', cans: 1, sets: [{won: 6, lost: 4}, {won: 3, lost: 6}, {won: 7, lost: 5}] },
+                { date: 'Tue, Jul 2', played: false },
+                { date: 'Wed, Jul 3', played: true, duration: '2h', singles: '0.5h', doubles: '1.5h', cans: 1, sets: [{won: 6, lost: 2}, {won: 6, lost: 4}] },
+                { date: 'Thu, Jul 4', played: true, duration: '1h', singles: '1h', doubles: '0h', cans: 0, sets: [{won: 6, lost: 3}] },
+                { date: 'Fri, Jul 5', played: false },
+                { date: 'Sat, Jul 6', played: true, duration: '2.5h', singles: '1.5h', doubles: '1h', cans: 1, sets: [{won: 7, lost: 6}, {won: 6, lost: 3}, {won: 4, lost: 6}] },
+                { date: 'Sun, Jul 7', played: true, duration: '1h', singles: '0h', doubles: '1h', cans: 0, sets: [{won: 2, lost: 6}] },
+            ];
 
             const div = document.createElement('div');
             div.className = 'p-2';
@@ -1277,30 +1265,30 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
                         <h3 class="text-lg font-bold text-orange-300 mb-1">Days Played</h3>
-                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.daysPlayed}</p>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogsSummary.daysPlayed}</p>
                     </div>
                     <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
                         <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Play Duration</h3>
-                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgPlayDuration}</p>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogsSummary.avgPlayDuration}</p>
                     </div>
                     <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
                         <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Singles Hours</h3>
-                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgSinglesHours}</p>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogsSummary.avgSinglesHours}</p>
                     </div>
                     <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
                         <h3 class="text-lg font-bold text-orange-300 mb-1">Avg. Doubles Hours</h3>
-                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.avgDoublesHours}</p>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogsSummary.avgDoublesHours}</p>
                     </div>
                     <div class="bg-zinc-900 p-4 rounded-xl shadow-lg border border-zinc-700 text-center">
                         <h3 class="text-lg font-bold text-orange-300 mb-1">New Cans Used</h3>
-                        <p class="text-3xl font-extrabold text-white">${mockPlayLogs.newCansUsed}</p>
+                        <p class="text-3xl font-extrabold text-white">${mockPlayLogsSummary.newCansUsed}</p>
                     </div>
                 </div>
 
                 <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
                     <h3 class="text-xl font-bold text-orange-300 mb-4">Daily Breakdown</h3>
                     <div class="space-y-3">
-                        ${mockPlayLogs.last7Days.map(day => `
+                        ${mockPlayLogsDaily.map(day => `
                             <div class="p-3 rounded-lg flex justify-between items-center ${day.played ? 'bg-zinc-800' : 'bg-zinc-700 text-gray-400'} border border-zinc-600">
                                 <span class="font-semibold">${day.date}</span>
                                 ${day.played ? `
@@ -1325,7 +1313,7 @@
 
         // --- New Add Play Log Page Render ---
         function renderAddPlayLogPage() {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0]; //YYYY-MM-DD format
             const currentHour = new Date().getHours();
             const defaultStartTime = `${currentHour.toString().padStart(2, '0')}:00`;
             const defaultEndTime = `${((currentHour + 1) % 24).toString().padStart(2, '0')}:00`;
@@ -1368,7 +1356,7 @@
 
                     <div class="mb-4">
                         <label for="racketUsed" class="block text-orange-300 text-sm font-bold mb-2">Racket Used:</label>
-                        <select id="racketUsed" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <select id="racketUsed" class="w-full p-3 mb-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
                             <option value="">-- Select Racket --</option>
                             ${appState.equipmentList.filter(item => item.name === 'Racket' && item.sport === appState.selectedSport)
                                 .map(racket => `<option value="${racket.id}">${racket.brand} ${racket.name.replace('Racket', '').trim()}</option>`).join('')}
@@ -1410,6 +1398,17 @@
                         <div id="shoesPhotosPreview" class="flex gap-2 mt-2 justify-center"></div>
                     </div>
 
+                    <div class="mb-6">
+                        <label for="numSets" class="block text-orange-300 text-sm font-bold mb-2">Number of Sets Played:</label>
+                        <input type="number" id="numSets" min="0" class="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500" value="0">
+                        <button id="generateScoreInputs" class="bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md w-full mt-3 hover:bg-orange-700 transition-colors duration-300">
+                            Generate Score Inputs
+                        </button>
+                    </div>
+                    <div id="setsScoreInputContainer" class="mb-6 space-y-3">
+                        <!-- Set score inputs will be dynamically added here -->
+                    </div>
+
                     <button id="savePlayLogButton" class="bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md w-full hover:bg-orange-600 transition-colors duration-300">
                         Save Play Log
                     </button>
@@ -1419,6 +1418,50 @@
 
             // Set up event listeners for the form
             document.getElementById('savePlayLogButton').onclick = handleSavePlayLog;
+            document.getElementById('generateScoreInputs').onclick = generateScoreInputs;
+            document.getElementById('playDate').value = appState.newPlayLogDate || today; // Set default or previous value
+            document.getElementById('startTime').value = appState.newPlayLogStartTime || defaultStartTime;
+            document.getElementById('endTime').value = appState.newPlayLogEndTime || defaultEndTime;
+            document.getElementById('playType').value = appState.newPlayLogPlayType || 'Singles';
+            document.getElementById('racketUsed').value = appState.newPlayLogRacketId || '';
+            document.getElementById('shoesUsed').value = appState.newPlayLogShoesId || '';
+            document.getElementById('numSets').value = appState.playLogSets;
+            
+            // Re-render score inputs if already set
+            if (appState.playLogSets > 0) {
+                generateScoreInputs();
+            }
+            // Re-render photo previews if already set
+            if (appState.playLogPhotos.racketBefore) {
+                const previewContainer = document.getElementById('racketPhotosPreview');
+                previewContainer.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = appState.playLogPhotos.racketBefore;
+                img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                previewContainer.appendChild(img);
+            }
+            if (appState.playLogPhotos.racketAfter) {
+                const previewContainer = document.getElementById('racketPhotosPreview');
+                const img = document.createElement('img');
+                img.src = appState.playLogPhotos.racketAfter;
+                img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                previewContainer.appendChild(img);
+            }
+            if (appState.playLogPhotos.shoesBefore) {
+                const previewContainer = document.getElementById('shoesPhotosPreview');
+                previewContainer.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = appState.playLogPhotos.shoesBefore;
+                img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                previewContainer.appendChild(img);
+            }
+            if (appState.playLogPhotos.shoesAfter) {
+                const previewContainer = document.getElementById('shoesPhotosPreview');
+                const img = document.createElement('img');
+                img.src = appState.playLogPhotos.shoesAfter;
+                img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                previewContainer.appendChild(img);
+            }
         }
 
         // --- Event Handlers for New Play Log Page ---
@@ -1436,15 +1479,56 @@
                 reader.onload = (e) => {
                     playLogPhotos[type] = e.target.result;
                     const previewContainer = document.getElementById(`${type.includes('racket') ? 'racketPhotosPreview' : 'shoesPhotosPreview'}`);
-                    previewContainer.innerHTML = ''; // Clear previous preview
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
-                    previewContainer.appendChild(img);
+                    // Clear only specific photo preview, not the whole container if multiple photos are allowed
+                    const existingImg = previewContainer.querySelector(`img[data-type="${type}"]`);
+                    if (existingImg) {
+                        existingImg.src = e.target.result;
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'h-16 w-16 object-cover rounded-md border border-zinc-600';
+                        img.dataset.type = type; // Add data attribute to identify
+                        previewContainer.appendChild(img);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         }
+
+        function generateScoreInputs() {
+            const numSets = parseInt(document.getElementById('numSets').value, 10);
+            const container = document.getElementById('setsScoreInputContainer');
+            container.innerHTML = ''; // Clear previous inputs
+            appState.playLogSets = numSets;
+            appState.playLogScores = []; // Reset scores
+
+            if (numSets > 0) {
+                for (let i = 0; i < numSets; i++) {
+                    const setId = `set-${i + 1}`;
+                    const setDiv = document.createElement('div');
+                    setDiv.className = 'flex items-center gap-2';
+                    setDiv.innerHTML = `
+                        <label class="text-orange-300 text-sm font-bold flex-shrink-0">${i + 1}. Set:</label>
+                        <input type="number" placeholder="Won" class="w-1/2 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm" data-set-index="${i}" data-score-type="won" value="${appState.playLogScores[i]?.won || ''}">
+                        <input type="number" placeholder="Lost" class="w-1/2 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm" data-set-index="${i}" data-score-type="lost" value="${appState.playLogScores[i]?.lost || ''}">
+                    `;
+                    container.appendChild(setDiv);
+
+                    // Add event listeners to capture changes
+                    setDiv.querySelectorAll('input').forEach(input => {
+                        input.onchange = (e) => {
+                            const index = parseInt(e.target.dataset.setIndex, 10);
+                            const scoreType = e.target.dataset.scoreType;
+                            if (!appState.playLogScores[index]) {
+                                appState.playLogScores[index] = { won: '', lost: '' };
+                            }
+                            appState.playLogScores[index][scoreType] = parseInt(e.target.value, 10);
+                        };
+                    });
+                }
+            }
+        }
+
 
         function handleSavePlayLog() {
             const date = document.getElementById('playDate').value;
@@ -1453,10 +1537,24 @@
             const playType = document.getElementById('playType').value;
             const racketUsed = document.getElementById('racketUsed').value;
             const shoesUsed = document.getElementById('shoesUsed').value;
+            const numSets = parseInt(document.getElementById('numSets').value, 10);
 
             if (!date || !startTime || !endTime || !playType) {
                 alert("Please fill in all required fields (Date, Start/End Time, Play Type).");
                 return;
+            }
+
+            // Validate scores if sets were entered
+            let scoresValid = true;
+            if (numSets > 0) {
+                for (let i = 0; i < numSets; i++) {
+                    const setScore = appState.playLogScores[i];
+                    if (!setScore || isNaN(setScore.won) || isNaN(setScore.lost)) {
+                        scoresValid = false;
+                        alert(`Please enter valid numerical scores for Set ${i + 1}.`);
+                        return;
+                    }
+                }
             }
 
             const newPlayLog = {
@@ -1470,16 +1568,129 @@
                 racketPhotoAfter: playLogPhotos.racketAfter,
                 shoesPhotoBefore: playLogPhotos.shoesBefore,
                 shoesPhotoAfter: playLogPhotos.shoesAfter,
+                setsPlayed: numSets,
+                scores: appState.playLogScores, // Capture the scores
             };
 
             console.log("New Play Log:", newPlayLog); // For demo, log to console
             alert("Play log saved successfully! (Check console for details)");
 
             // Reset form and navigate back
-            playLogPhotos = { racketBefore: null, racketAfter: null, shoesBefore: null, shoesAfter: null }; // Clear photos
+            appState.playLogPhotos = { racketBefore: null, racketAfter: null, shoesBefore: null, shoesAfter: null }; // Clear photos
+            appState.playLogSets = 0;
+            appState.playLogScores = [];
             navigate('playLogsDetail', appState.selectedSport);
         }
 
+        // --- New Trends Selection Page ---
+        function renderTrendsSelectionPage() {
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('activities')" aria-label="Back to Activities">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">Trends</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-zinc-900 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center justify-center min-h-[120px]"
+                         onclick="navigate('performanceTrendsPage', appState.selectedSport)">
+                        <svg class="w-10 h-10 text-orange-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        <h3 class="text-xl font-bold text-orange-300 mb-1">Performance Trends</h3>
+                        <p class="text-sm text-gray-400">Analyze your game performance over time.</p>
+                    </div>
+                    <div class="bg-zinc-900 text-white rounded-xl shadow-lg p-6 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center justify-center min-h-[120px]"
+                         onclick="navigate('gearHealthTrendsPage', appState.selectedSport)">
+                        <svg class="w-10 h-10 text-orange-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                        <h3 class="text-xl font-bold text-orange-300 mb-1">Gear Health Trends</h3>
+                        <p class="text-sm text-gray-400">See how your gear's condition changes.</p>
+                    </div>
+                </div>
+            `;
+            mainContent.appendChild(div);
+        }
+
+        // --- New Performance Trends Page Render ---
+        function renderPerformanceTrendsPage() {
+            // Mock trend data (can be expanded for monthly/weekly logic)
+            const mockPerformanceTrends = {
+                weekly: {
+                    avgGamesWonLost: "6-4",
+                    avgDuration: "1.8 hrs",
+                    avgSingles: "1.0 hrs",
+                    avgDoubles: "0.8 hrs",
+                    notes: "Consistent performance this week. Focus on closing out tie-breaks."
+                },
+                monthly: {
+                    avgGamesWonLost: "7-5",
+                    avgDuration: "1.7 hrs",
+                    avgSingles: "1.2 hrs",
+                    avgDoubles: "0.5 hrs",
+                    notes: "Overall improvement in singles matches. Doubles play slightly reduced."
+                }
+            };
+
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('trendsSelection', appState.selectedSport)" aria-label="Back to Trends">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Performance Trends</h2>
+                </div>
+
+                <div class="flex justify-center gap-4 mb-6">
+                    <button id="weeklyTrendBtn" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-200 ${appState.selectedTrendPeriod === 'weekly' ? 'bg-orange-600 text-white' : 'bg-zinc-700 text-gray-300 hover:bg-zinc-600'}">
+                        Weekly
+                    </button>
+                    <button id="monthlyTrendBtn" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-200 ${appState.selectedTrendPeriod === 'monthly' ? 'bg-orange-600 text-white' : 'bg-zinc-700 text-gray-300 hover:bg-zinc-600'}">
+                        Monthly
+                    </button>
+                </div>
+
+                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700">
+                    <h3 class="text-xl font-bold text-orange-300 mb-4">Summary (${appState.selectedTrendPeriod === 'weekly' ? 'Last Week' : 'Last Month'})</h3>
+                    <div class="space-y-3 text-gray-300">
+                        <p><strong>Avg. Games Won/Lost:</strong> ${mockPerformanceTrends[appState.selectedTrendPeriod].avgGamesWonLost}</p>
+                        <p><strong>Avg. Duration:</strong> ${mockPerformanceTrends[appState.selectedTrendPeriod].avgDuration}</p>
+                        <p><strong>Avg. Singles Play:</strong> ${mockPerformanceTrends[appState.selectedTrendPeriod].avgSingles}</p>
+                        <p><strong>Avg. Doubles Play:</strong> ${mockPerformanceTrends[appState.selectedTrendPeriod].avgDoubles}</p>
+                        <p class="mt-4 text-gray-400 italic">${mockPerformanceTrends[appState.selectedTrendPeriod].notes}</p>
+                    </div>
+                </div>
+            `;
+            mainContent.appendChild(div);
+
+            document.getElementById('weeklyTrendBtn').onclick = () => { appState.selectedTrendPeriod = 'weekly'; render(); };
+            document.getElementById('monthlyTrendBtn').onclick = () => { appState.selectedTrendPeriod = 'monthly'; render(); };
+        }
+
+        // --- New Gear Health Trends Page Render (Placeholder) ---
+        function renderGearHealthTrendsPage() {
+            const div = document.createElement('div');
+            div.className = 'p-2';
+            div.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('trendsSelection', appState.selectedSport)" aria-label="Back to Trends">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health Trends</h2>
+                </div>
+                <div class="bg-zinc-900 p-6 rounded-xl shadow-lg border border-zinc-700 text-center">
+                    <p class="text-lg text-gray-300">Gear Health Trends coming soon!</p>
+                    <p class="text-sm text-gray-400 mt-2">This page will show how your equipment's condition changes over time.</p>
+                </div>
+            `;
+            mainContent.appendChild(div);
+        }
 
         // --- Initial Render & Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
