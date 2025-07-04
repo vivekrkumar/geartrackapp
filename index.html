@@ -389,7 +389,7 @@
             } else if (appState.appMode === 'gearTypeDetail') { // New mode
                 renderGearTypeDetail(appState.selectedGearType);
             } else if (appState.appMode === 'specificGearItemDetail') { // New mode for individual gear item details
-                renderSpecificGearItemDetail(appState.appState.selectedGearItem); // Pass the specific item
+                renderSpecificGearItemDetail(appState.selectedGearItem); // Pass the specific item
             } else if (appState.appMode === 'addGear') {
                 renderAddGear();
             }
@@ -669,17 +669,15 @@
             const div = document.createElement('div');
             div.className = 'p-2';
             div.innerHTML = `
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
-                            <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                            </svg>
-                        </button>
-                        <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health</h2>
-                    </div>
+                <div class="flex items-center mb-6">
+                    <button class="p-2 rounded-full hover:bg-zinc-700 transition-colors mr-2" onclick="navigate('sportDashboard', '${appState.selectedSport}')" aria-label="Back to Dashboard">
+                        <svg class="w-6 h-6 text-orange-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-orange-400">${appState.selectedSport} Gear Health</h2>
                     <!-- Moved Add Gear button here -->
-                    <button id="addGearButtonTopRight" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1">
+                    <button id="addGearButtonTopRight" class="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-300 text-sm flex items-center gap-1 ml-auto">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-3 3V9a9 9 0 110 18A9 9 0 0112 9z" />
                         </svg>
@@ -737,58 +735,22 @@
                     const itemCard = document.createElement('div');
                     itemCard.className = 'bg-zinc-900 text-white rounded-xl shadow-lg p-4 cursor-pointer hover:bg-zinc-800 transition-colors duration-300 transform hover:scale-105 flex flex-col items-center text-center';
                     
-                    let displayName = item.brand;
-                    if (item.name === "Racket" || item.name === "Shoes") { // Remove "Racket" or "Shoes" from display name
-                        displayName += ` ${item.name === "Racket" ? item.name.replace('Racket', '') : item.name.replace('Shoes', '')} ${item.name}`; // Keep original name for consistency in data, but display only brand
-                        displayName = item.brand + ' ' + item.name.replace(item.name, item.name.includes('Racket') ? item.name.replace('Racket', '') : item.name.includes('Shoes') ? item.name.replace('Shoes', '') : item.name);
-                        // Simplified display name logic
-                        displayName = item.brand;
-                        if (item.name === "Racket") {
-                           displayName += ` ${item.name.replace('Racket', '')}`; // If it's a racket, just show brand and model
-                        } else if (item.name === "Shoes") {
-                           displayName += ` ${item.name.replace('Shoes', '')}`; // If it's shoes, just show brand and model
-                        }
-                        // For specific items like "Wilson Clash 100 V2 Pro"
-                        if (item.brand.includes('Wilson Clash')) { // Special handling for Wilson Clash rackets
-                            displayName = item.brand;
-                        } else if (item.brand.includes('Nike Vapour')) { // Special handling for Nike shoes
-                            displayName = item.brand;
-                        } else {
-                            displayName = `${item.brand} ${item.name}`; // Default for others
-                        }
-                        // Corrected logic for removing "Racket" from racket names
-                        if (item.name === "Racket") {
-                            displayName = `${item.brand} ${item.name.replace('Racket', '').trim()}`;
-                            if (item.brand.includes('Wilson Clash')) { // Special case for Wilson Clash rackets
-                                displayName = item.brand; // Keep full brand name if it includes "Racket" in its own data
-                            }
-                        } else if (item.name === "Shoes") {
-                            displayName = `${item.brand} ${item.name.replace('Shoes', '').trim()}`;
-                        } else {
-                            displayName = `${item.brand} ${item.name}`;
-                        }
-                        // Final refined logic for item display names
-                        let cardDisplayName = item.brand;
-                        if (item.name === "Racket" && item.brand.includes("Wilson Clash")) {
-                            cardDisplayName = item.brand; // Keep full name like "Wilson Clash 100 V2 Pro"
-                        } else if (item.name === "Racket") {
-                            cardDisplayName = `${item.brand} ${item.name}`; // "Yonex Astrox 88S Racket"
-                        } else if (item.name === "Shoes" && item.brand.includes("Nike Vapour")) {
-                            cardDisplayName = item.brand; // Keep full name like "Nike Vapour Zoom v9"
-                        } else if (item.name === "Shoes") {
-                            cardDisplayName = `${item.brand} ${item.name}`; // "Li-Ning Saga Shoes"
-                        } else {
-                            cardDisplayName = `${item.brand} ${item.name}`; // Default for Balls, Court, Watch
-                        }
-                        // Refined logic for removal of worn/used images
-                        let imageSrc = item.currentImage;
-                        if (item.name === "Racket" || item.name === "Shoes") {
-                            // No change, keep currentImage as it's a placeholder for the item itself, not "worn" status
-                        }
-
-
+                    let cardDisplayName = item.brand;
+                    // Remove "Racket" or "Shoes" from display name if it's the item's type, not part of brand
+                    if (item.name === "Racket" && item.brand.includes("Wilson Clash")) {
+                        cardDisplayName = item.brand; // e.g., "Wilson Clash 100 V2 Pro"
+                    } else if (item.name === "Racket") {
+                        cardDisplayName = `${item.brand}`; // e.g., "Babolat" for a racket
+                    } else if (item.name === "Shoes" && item.brand.includes("Nike Vapour")) {
+                        cardDisplayName = item.brand; // e.g., "Nike Vapour Zoom v9"
+                    } else if (item.name === "Shoes") {
+                        cardDisplayName = `${item.brand}`; // e.g., "Adidas" for shoes
+                    } else {
+                        cardDisplayName = `${item.brand} ${item.name}`; // Default for Balls, Court, Watch
+                    }
+                    
                     itemCard.innerHTML = `
-                        <img src="${imageSrc}" alt="${cardDisplayName}" class="h-24 w-24 object-contain rounded-md mb-2 border border-zinc-700" onerror="this.onerror=null;this.src='https://placehold.co/96x96/333333/FFFFFF?text=Item';" />
+                        <img src="${item.currentImage}" alt="${cardDisplayName}" class="h-24 w-24 object-contain rounded-md mb-2 border border-zinc-700" onerror="this.onerror=null;this.src='https://placehold.co/96x96/333333/FFFFFF?text=Item';" />
                         <h3 class="text-xl font-bold text-orange-300 mb-1">${cardDisplayName}</h3>
                     `;
                     // When a specific gear item is clicked, navigate to its detailed performance scoring page
@@ -1105,7 +1067,7 @@
                     suggestion: "New Gear",
                     aiCommentary: "This is new gear! No wear detected yet. Enjoy your first sessions!",
                     injuries: [],
-                    currentImage: appState.autoTagResult.imageUrl,
+                    currentImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal", // Use ideal image for newly added gear
                     idealImage: "https://placehold.co/100x100/FF5722/FFFFFF?text=Ideal",
                     sport: appState.autoTagResult.detectedSport,
                 };
@@ -1197,9 +1159,8 @@
             // Global Nav Buttons
             document.getElementById('homeButtonHeader').onclick = () => navigate('sportsSelection');
             document.getElementById('navHome').onclick = () => navigate('sportsSelection');
-            document.getElementById('navAddGear').onclick = () => navigate('addGear');
-            document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]); // Default to first sport if none selected
             document.getElementById('navActivities').onclick = () => alert("Activities page coming soon!"); // New Activities button
+            document.getElementById('navMyGear').onclick = () => navigate('gearList', appState.selectedSport || Object.keys(initialGearData)[0]); // Default to first sport if none selected
             document.getElementById('navProfile').onclick = () => alert("Profile coming soon!");
 
             // Modal Close Buttons
